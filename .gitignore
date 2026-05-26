@@ -1,3 +1,6 @@
-.claude/
-test-screenshot.png
-uploads/
+node_modules/
+excel_output.txt
+read_excel.js
+read_excel2.js
+read_team.js
+*.tmp

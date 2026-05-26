@@ -3,7 +3,7 @@
 // !! ตั้งค่า URL และ ANON KEY ของคุณด้านล่าง !!
 // ============================================================
 
-const SUPABASE_URL      = 'https://bymztztdariviepsgbl.supabase.co';
+const SUPABASE_URL      = 'https://bymztzztdariviepsgbl.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJ5bXp0enp0ZGFyaXZpZXBzZ2JsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk4MDUzMTEsImV4cCI6MjA5NTM4MTMxMX0.A7Vn-vvQ71FGhpKNWpnancnrbwU26JiUjTEREueUoL4';
 
 const _isConfigured = SUPABASE_URL !== 'YOUR_SUPABASE_URL';
