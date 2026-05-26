@@ -72,14 +72,96 @@ const App = () => {
   const [isLoggedIn, setIsLoggedIn] = useState(() => {
     return localStorage.getItem("isLoggedIn") === "true";
   });
-  const [team, setTeam] = useState(window.SEED_TEAM);
-  const [hospitals, setHospitals] = useState(window.SEED_HOSPITALS);
-  const [targets, setTargets] = useState(window.SEED_TARGETS);
+  const [team, setTeam]           = useState([]);
+  const [hospitals, setHospitals] = useState([]);
+  const [targets, setTargets]     = useState(window.SEED_TARGETS);
+  const [loading, setLoading]     = useState(window.SupabaseDB?.isConfigured === true);
+  const [dataLoaded, setDataLoaded] = useState(false);
+  const prevHospitalsRef = React.useRef(null);
+  const prevTeamRef      = React.useRef(null);
+
   const [route, setRoute] = useState("dashboard");
   const [year, setYear] = useState(2026);
   const [dismissedReminders, setDismissedReminders] = useState([]);
   const [sentReminders, setSentReminders] = useState([]);
   const [focusHospitalId, setFocusHospitalId] = useState(null);
+
+  // ── โหลดข้อมูลจาก Supabase ครั้งแรก ──────────────────────
+  useEffect(() => {
+    if (!window.SupabaseDB?.isConfigured) {
+      setTeam(window.SEED_TEAM);
+      setHospitals(window.SEED_HOSPITALS);
+      setTargets(window.SEED_TARGETS);
+      setDataLoaded(true);
+      return;
+    }
+    window.SupabaseDB.loadAll().then(({ team, hospitals, targets }) => {
+      setTeam(team);
+      setHospitals(hospitals);
+      setTargets(targets);
+      prevTeamRef.current      = team;
+      prevHospitalsRef.current = hospitals;
+      setDataLoaded(true);
+      setLoading(false);
+    }).catch(err => {
+      console.error('[Supabase] loadAll failed:', err);
+      setTeam(window.SEED_TEAM);
+      setHospitals(window.SEED_HOSPITALS);
+      setTargets(window.SEED_TARGETS);
+      setDataLoaded(true);
+      setLoading(false);
+    });
+  }, []);
+
+  // ── Sync hospitals → Supabase เมื่อข้อมูลเปลี่ยน ────────
+  useEffect(() => {
+    if (!dataLoaded || !window.SupabaseDB?.isConfigured) return;
+    const prev = prevHospitalsRef.current;
+    if (!prev) { prevHospitalsRef.current = hospitals; return; }
+
+    if (hospitals.length > prev.length) {
+      const added = hospitals.filter(h => !prev.find(p => p.id === h.id));
+      added.forEach(h => window.SupabaseDB.upsertHospital(h));
+    } else if (hospitals.length < prev.length) {
+      const removed = prev.filter(p => !hospitals.find(c => c.id === p.id));
+      removed.forEach(h => window.SupabaseDB.deleteHospital(h.id));
+    } else {
+      const updated = hospitals.filter(h => {
+        const p = prev.find(p => p.id === h.id);
+        return p && JSON.stringify(p) !== JSON.stringify(h);
+      });
+      updated.forEach(h => window.SupabaseDB.upsertHospital(h));
+    }
+    prevHospitalsRef.current = hospitals;
+  }, [hospitals, dataLoaded]);
+
+  // ── Sync team → Supabase เมื่อข้อมูลเปลี่ยน ─────────────
+  useEffect(() => {
+    if (!dataLoaded || !window.SupabaseDB?.isConfigured) return;
+    const prev = prevTeamRef.current;
+    if (!prev) { prevTeamRef.current = team; return; }
+
+    if (team.length > prev.length) {
+      const added = team.filter(m => !prev.find(p => p.id === m.id));
+      added.forEach(m => window.SupabaseDB.upsertMember(m));
+    } else if (team.length < prev.length) {
+      const removed = prev.filter(p => !team.find(c => c.id === p.id));
+      removed.forEach(m => window.SupabaseDB.deleteMember(m.id));
+    } else {
+      const updated = team.filter(m => {
+        const p = prev.find(p => p.id === m.id);
+        return p && JSON.stringify(p) !== JSON.stringify(m);
+      });
+      updated.forEach(m => window.SupabaseDB.upsertMember(m));
+    }
+    prevTeamRef.current = team;
+  }, [team, dataLoaded]);
+
+  // ── Sync targets → Supabase เมื่อข้อมูลเปลี่ยน ──────────
+  useEffect(() => {
+    if (!dataLoaded || !window.SupabaseDB?.isConfigured) return;
+    window.SupabaseDB.saveTargets(targets);
+  }, [targets, dataLoaded]);
 
   const handleLogout = () => {
     if (confirm("ต้องการออกจากระบบ?")) {
@@ -134,6 +216,28 @@ const App = () => {
     team: team.length,
     hospitals: yearHosps.length,
   };
+
+  if (loading) {
+    return (
+      <div style={{
+        position: "fixed", inset: 0,
+        display: "flex", flexDirection: "column",
+        alignItems: "center", justifyContent: "center",
+        background: "rgb(255, 248, 249)", gap: 16,
+      }}>
+        <div style={{
+          width: 48, height: 48, borderRadius: "50%",
+          border: "4px solid var(--border-2)",
+          borderTopColor: "var(--accent)",
+          animation: "spin 0.8s linear infinite",
+        }} />
+        <div style={{ fontFamily: "var(--font-display)", fontWeight: 600, color: "var(--muted)" }}>
+          กำลังโหลดข้อมูลจาก Supabase…
+        </div>
+        <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+      </div>
+    );
+  }
 
   return (
     <ToastProvider>
