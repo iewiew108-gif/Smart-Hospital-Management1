@@ -35,6 +35,7 @@ create table if not exists hospitals (
   year                integer not null,
   name                text not null,
   code                text,
+  marketing_name      text,
   taiga               text,
   taiga_url           text,
   province            text,

@@ -399,7 +399,7 @@ const FollowupsEditor = ({ items, onChange }) => {
 
 const HospitalForm = ({ initial, team, onSave, onCancel, onDirtyChange }) => {
   const [form, setForm] = useState(initial || {
-    name: "", code: "", taiga: "", taigaUrl: "", year: new Date().getFullYear(),
+    name: "", code: "", taiga: "", taigaUrl: "", marketingName: "", year: new Date().getFullYear(),
     start: "", end: "", warrantyEnd: "", weeks: 0,
     teamSize: 0, team: [], lead: "",
     auxTeam: [],
@@ -503,6 +503,9 @@ const HospitalForm = ({ initial, team, onSave, onCancel, onDirtyChange }) => {
           <select className="select" value={form.type} onChange={e => set("type", e.target.value)}>
             {HOSPITAL_TYPES.map(t => <option key={t}>{t}</option>)}
           </select>
+        </Field>
+        <Field label="การตลาดที่รับผิดชอบ" en="Marketing">
+          <input className="input" value={form.marketingName || ""} onChange={e => set("marketingName", e.target.value)} placeholder="ชื่อการตลาด…" />
         </Field>
         <Field label="Link Taiga" en="Taiga URL" span={3} hint="ลิงก์บอร์ด Taiga ของโครงการนี้">
           <div className="row" style={{ gap: 8 }}>
