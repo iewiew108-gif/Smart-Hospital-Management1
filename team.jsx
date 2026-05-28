@@ -222,6 +222,7 @@ const TeamForm = ({ initial, onSave, onCancel, onDirtyChange }) => {
 const TeamScreen = ({ team, setTeam, hospitals, year }) => {
   const [q, setQ] = useState("");
   const [view, setView] = useState("grid");
+  const [statusFilter, setStatusFilter] = useState("ปฏิบัติงานอยู่");
   const [editing, setEditing] = useState(null); // null | "new" | member
   const [viewing, setViewing] = useState(null);
   const toast = useToast();
@@ -234,7 +235,7 @@ const TeamScreen = ({ team, setTeam, hospitals, year }) => {
   };
 
   const filtered = team.filter(t => {
-    if (t.workStatus === "ลาออก") return false;
+    if (statusFilter !== "ทั้งหมด" && (t.workStatus || "ปฏิบัติงานอยู่") !== statusFilter) return false;
     const s = (t.fname + t.lname + t.nick + t.posFull).toLowerCase();
     return s.includes(q.toLowerCase());
   });
@@ -271,6 +272,16 @@ const TeamScreen = ({ team, setTeam, hospitals, year }) => {
         </div>
         <div className="row" style={{ gap: 10 }}>
           <SearchBox value={q} onChange={setQ} placeholder="ค้นหาด้วยชื่อ / ชื่อเล่น / ตำแหน่ง" />
+          <div className="row" style={{ gap: 4 }}>
+            {["ปฏิบัติงานอยู่", "ย้ายแผนก", "ลาออก", "ทั้งหมด"].map(s => (
+              <button
+                key={s}
+                type="button"
+                className={"btn btn-sm" + (statusFilter === s ? " btn-accent" : "")}
+                onClick={() => setStatusFilter(s)}
+              >{s}</button>
+            ))}
+          </div>
           <Tabs
             items={[{ value: "grid", label: <Icon name="grid" size={12} /> }, { value: "list", label: <Icon name="list" size={12} /> }]}
             value={view} onChange={setView}
