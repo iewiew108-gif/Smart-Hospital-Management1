@@ -22,7 +22,7 @@ const HOSPITAL_TYPES = [
 ];
 const WORK_TYPES = ["Onsite", "Online", "MA", "ติดตั้งด้วยตัวเอง Phase 1", "ติดตั้งด้วยตัวเอง Phase 2", "ติดตั้งด้วยตัวเอง Phase 3", "ติดตั้งด้วยตัวเอง Phase 4", "ติดตั้งด้วยตัวเอง Phase 5", "ติดตั้งด้วยตัวเอง Phase 6", "ติดตั้งด้วยตัวเอง Phase 7", "ติดตั้งด้วยตัวเอง Phase 8", "ติดตั้งด้วยตัวเอง Phase 9", "ติดตั้งด้วยตัวเอง Phase 10"];
 const INSTALL_STATUS = ["รอเริ่ม", "กำลังติดตั้ง", "ทดสอบระบบ", "ติดตั้งเสร็จ", "ในประกัน", "ปิดงาน", "เก็บได้แล้วเงินแล้ว", "ติดปัญหาเก็บเงินไม่ได้"];
-const ADVANCE_STATUS = ["ยังไม่ Advance", "Advance แล้ว", "เคลียร์แล้ว", "บางส่วน"];
+const ADVANCE_STATUS = ["ยังไม่ Advance", "Advance แล้ว", "เคลียร์แล้ว", "บางส่วน", "ไม่ต้องทำ Advance"];
 const HOSXP_VERSIONS = ["HOSxP XE 4", "HOSxP V3", "อื่น ๆ"];
 const DB_TYPES = ["PostgreSQL", "MySQL", "MariaDB", "MS SQL Server", "Oracle"];
 const INSTALL_PHASES = ["Phase 1", "Phase 2", "Phase 3", "Phase 4", "Phase 5", "Phase 6", "ติดตั้งครบทุก ward"];
@@ -110,8 +110,9 @@ window.statusChipClass = (status) => {
   return "chip-outline";
 };
 window.advanceChipClass = (status) => {
-  if (status === "เคลียร์แล้ว") return "chip-success";
-  if (status === "Advance แล้ว") return "chip-warning";
-  if (status === "บางส่วน") return "chip-accent";
+  if (status === "เคลียร์แล้ว")       return "chip-success";
+  if (status === "Advance แล้ว")      return "chip-warning";
+  if (status === "บางส่วน")           return "chip-accent";
+  if (status === "ไม่ต้องทำ Advance") return "chip-info";
   return "chip-outline";
 };

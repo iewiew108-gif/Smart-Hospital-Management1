@@ -144,7 +144,7 @@ const TeamForm = ({ initial, onSave, onCancel, onDirtyChange }) => {
           </select>
         </Field>
         <Field label="วันเกิด" en="Birthday">
-          <input className="input" type="date" value={form.bday} onChange={e => set("bday", e.target.value)} />
+          <ThaiDateInput value={form.bday} onChange={v => set("bday", v)} />
         </Field>
         <Field label="ศาสนา" en="Religion">
           <select title="ศาสนา" className="select" value={form.religion} onChange={e => set("religion", e.target.value)}>

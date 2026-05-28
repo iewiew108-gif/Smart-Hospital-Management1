@@ -63,13 +63,16 @@ const ConnSection = ({ num, title, sub, icon, color = "var(--accent)", action, c
 const ConnField = ({ label, value, onChange, mono = true, type = "text", placeholder = "" }) => (
   <div className="field">
     <label className="label">{label}</label>
-    <input
-      className={"input " + (mono ? "mono" : "")}
-      type={type}
-      value={value || ""}
-      onChange={e => onChange(e.target.value)}
-      placeholder={placeholder}
-    />
+    {type === "date"
+      ? <ThaiDateInput value={value || ""} onChange={onChange} />
+      : <input
+          className={"input " + (mono ? "mono" : "")}
+          type={type}
+          value={value || ""}
+          onChange={e => onChange(e.target.value)}
+          placeholder={placeholder}
+        />
+    }
   </div>
 );
 

@@ -136,6 +136,48 @@ const Drawer = ({ open, onClose, wide, children }) => {
   );
 };
 
+// ----- Thai Date Input (พ.ศ.)
+const THAI_MONTHS = [
+  "มกราคม","กุมภาพันธ์","มีนาคม","เมษายน","พฤษภาคม","มิถุนายน",
+  "กรกฎาคม","สิงหาคม","กันยายน","ตุลาคม","พฤศจิกายน","ธันวาคม"
+];
+const ThaiDateInput = ({ value, onChange }) => {
+  const toThai = (iso) => {
+    if (!iso) return { d: "", m: "", y: "" };
+    const [y, m, d] = iso.split("-");
+    return { d: parseInt(d, 10), m: parseInt(m, 10), y: parseInt(y, 10) + 543 };
+  };
+  const [parts, setParts] = useState(() => toThai(value));
+  useEffect(() => { setParts(toThai(value)); }, [value]);
+  const emit = (p) => {
+    if (p.d && p.m && p.y > 2400) {
+      const ceY = p.y - 543;
+      onChange(`${ceY}-${String(p.m).padStart(2,"0")}-${String(p.d).padStart(2,"0")}`);
+    } else if (!p.d && !p.m && !p.y) {
+      onChange("");
+    }
+  };
+  const set = (k, v) => { const next = { ...parts, [k]: v }; setParts(next); emit(next); };
+  return (
+    <div className="row" style={{ gap: 6 }}>
+      <select title="วัน" className="select" value={parts.d} onChange={e => set("d", +e.target.value)} style={{ width: 64 }}>
+        <option value="">วัน</option>
+        {Array.from({ length: 31 }, (_, i) => i + 1).map(d => <option key={d} value={d}>{d}</option>)}
+      </select>
+      <select title="เดือน" className="select" value={parts.m} onChange={e => set("m", +e.target.value)} style={{ flex: 1 }}>
+        <option value="">เดือน</option>
+        {THAI_MONTHS.map((name, i) => <option key={i + 1} value={i + 1}>{name}</option>)}
+      </select>
+      <input
+        className="input mono" type="number" placeholder="ปี พ.ศ."
+        value={parts.y || ""} min={2500} max={2599}
+        onChange={e => set("y", +e.target.value)}
+        style={{ width: 96 }}
+      />
+    </div>
+  );
+};
+
 // ----- Search
 const SearchBox = ({ value, onChange, placeholder = "ค้นหา..." }) => (
   <div className="search">

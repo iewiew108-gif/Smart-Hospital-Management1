@@ -542,18 +542,18 @@ const HospitalForm = ({ initial, team, onSave, onCancel, onDirtyChange }) => {
       </div>
 
       <div className="form-section-title"><span className="num">3</span>ระยะเวลาติดตั้ง</div>
-      <div className="grid" style={{ gridTemplateColumns: "1fr 1fr 1fr 1fr", gap: 12, marginBottom: 18 }}>
+      <div className="grid" style={{ gridTemplateColumns: "2fr 2fr 1fr 2fr", gap: 12, marginBottom: 18 }}>
         <Field label="วันที่เริ่มติดตั้ง" en="Start">
-          <input className="input" type="date" value={form.start} onChange={e => set("start", e.target.value)} />
+          <ThaiDateInput value={form.start} onChange={v => set("start", v)} />
         </Field>
         <Field label="สิ้นสุดวันที่" en="End">
-          <input className="input" type="date" value={form.end} onChange={e => set("end", e.target.value)} />
+          <ThaiDateInput value={form.end} onChange={v => set("end", v)} />
         </Field>
         <Field label="รวม (สัปดาห์)" en="Weeks">
           <input className="input mono" type="number" value={form.weeks} readOnly />
         </Field>
         <Field label="สิ้นสุดประกัน" en="Warranty">
-          <input className="input" type="date" value={form.warrantyEnd} onChange={e => set("warrantyEnd", e.target.value)} />
+          <ThaiDateInput value={form.warrantyEnd} onChange={v => set("warrantyEnd", v)} />
         </Field>
         <Field label="ประเภทงาน" en="Work type">
           <select className="select" value={form.workType} onChange={e => set("workType", e.target.value)}>
@@ -1298,12 +1298,9 @@ const HospitalsScreen = ({ hospitals, setHospitals, team, year, focusId, onFocus
                     <td>
                       <div style={{ marginBottom: 4 }}>
                         {lead ? (
-                          <div className="row" style={{ gap: 6, alignItems: "center" }}>
-                            <Avatar name={lead.nick} color={lead.avatar} />
-                            <div style={{ flex: 1, minWidth: 0 }}>
-                              <div style={{ fontWeight: 600, fontSize: 12 }}>{lead.nick}</div>
-                              <div className="tiny muted">{lead.posShort}</div>
-                            </div>
+                          <div>
+                            <div style={{ fontWeight: 600, fontSize: 12 }}>{lead.nick}</div>
+                            <div className="tiny muted">{lead.posShort}</div>
                           </div>
                         ) : (
                           <div className="tiny muted">ยังไม่ระบุ</div>
@@ -1311,28 +1308,10 @@ const HospitalsScreen = ({ hospitals, setHospitals, team, year, focusId, onFocus
                       </div>
                       {members.length > 0 && (
                         <div style={{ marginTop: 6, paddingTop: 6, borderTop: "1px solid var(--border-2)" }}>
-                          <div className="tiny muted" style={{ marginBottom: 4 }}>ทีม ({members.length} คน):</div>
-                          <div className="row" style={{ gap: 4, flexWrap: "wrap" }}>
-                            {members.filter(m => m.id !== h.lead).slice(0, 3).map(m => (
-                              <div key={m.id} title={m.nick} style={{
-                                width: 28, height: 28, borderRadius: 50,
-                                background: m.avatar, color: "#fff",
-                                display: "grid", placeItems: "center",
-                                fontSize: 11, fontWeight: 700, flexShrink: 0
-                              }}>
-                                {m.nick.slice(0, 2)}
-                              </div>
-                            ))}
-                            {members.length > 4 && (
-                              <div style={{
-                                width: 28, height: 28, borderRadius: 50,
-                                background: "var(--bg-2)", color: "var(--muted)",
-                                display: "grid", placeItems: "center",
-                                fontSize: 10, fontWeight: 700
-                              }}>
-                                +{members.length - 4}
-                              </div>
-                            )}
+                          <div className="tiny muted">ทีม ({members.length} คน)</div>
+                          <div className="tiny" style={{ color: "var(--fg)" }}>
+                            {members.filter(m => m.id !== h.lead).slice(0, 3).map(m => m.nick).join(", ")}
+                            {members.length > 4 && ` +${members.length - 4}`}
                           </div>
                         </div>
                       )}
@@ -1494,7 +1473,7 @@ const HospitalsScreen = ({ hospitals, setHospitals, team, year, focusId, onFocus
         onClose={handleCloseEditing}
         title={editing === "new" ? "เพิ่มโรงพยาบาลใหม่" : "แก้ไขข้อมูลโรงพยาบาล"}
         sub={editing === "new" ? "กรอกข้อมูลโครงการติดตั้ง" : editing?.name}
-        size="xl"
+        size="2xl"
       >
         {editing && (
           <HospitalForm
