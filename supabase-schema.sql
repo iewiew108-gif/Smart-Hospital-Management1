@@ -38,6 +38,7 @@ create table if not exists hospitals (
   name                text not null,
   code                text,
   marketing_name      text,
+  project_type        text,
   taiga               text,
   taiga_url           text,
   province            text,

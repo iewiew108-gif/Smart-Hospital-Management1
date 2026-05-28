@@ -399,7 +399,7 @@ const FollowupsEditor = ({ items, onChange }) => {
 
 const HospitalForm = ({ initial, team, onSave, onCancel, onDirtyChange }) => {
   const [form, setForm] = useState(initial || {
-    name: "", code: "", taiga: "", taigaUrl: "", marketingName: "", year: new Date().getFullYear(),
+    name: "", code: "", taiga: "", taigaUrl: "", marketingName: "", projectType: "", year: new Date().getFullYear(),
     start: "", end: "", warrantyEnd: "", weeks: 0,
     teamSize: 0, team: [], lead: "",
     auxTeam: [],
@@ -506,6 +506,14 @@ const HospitalForm = ({ initial, team, onSave, onCancel, onDirtyChange }) => {
         </Field>
         <Field label="การตลาดที่รับผิดชอบ" en="Marketing">
           <input className="input" value={form.marketingName || ""} onChange={e => set("marketingName", e.target.value)} placeholder="ชื่อการตลาด…" />
+        </Field>
+        <Field label="ประเภท Project" en="Project Type">
+          <select title="ประเภท Project" className="select" value={form.projectType || ""} onChange={e => set("projectType", e.target.value)}>
+            <option value="">— เลือก —</option>
+            <option>ติดตั้งภาพจังหวัดน่าน</option>
+            <option>ติดตั้งภาพจังหวัดนราธิวาส</option>
+            <option>ติดตั้งภาพจังหวัดแพร่</option>
+          </select>
         </Field>
         <Field label="Link Taiga" en="Taiga URL" span={3} hint="ลิงก์บอร์ด Taiga ของโครงการนี้">
           <div className="row" style={{ gap: 8 }}>
