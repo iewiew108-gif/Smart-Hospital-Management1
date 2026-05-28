@@ -107,9 +107,11 @@ const _memberToDb = (m) => ({
   gender:    m.gender     || 'ชาย',
   mentor:    m.mentor     || '',
   line_id:   m.line       || '',
-  avatar:    m.avatar     || '#5B5BD6',
-  photo:     m.photo      || null,
-  emoji:     m.emoji      || null,
+  avatar:      m.avatar      || '#5B5BD6',
+  photo:       m.photo       || null,
+  emoji:       m.emoji       || null,
+  work_status: m.workStatus  || 'ปฏิบัติงานอยู่',
+  department:  m.department  || '',
 });
 
 const _memberFromDb = (row) => ({
@@ -130,9 +132,11 @@ const _memberFromDb = (row) => ({
   gender:   row.gender     || 'ชาย',
   mentor:   row.mentor     || '',
   line:     row.line_id    || '',
-  avatar:   row.avatar     || '#5B5BD6',
-  photo:    row.photo      || null,
-  emoji:    row.emoji      || null,
+  avatar:      row.avatar       || '#5B5BD6',
+  photo:       row.photo        || null,
+  emoji:       row.emoji        || null,
+  workStatus:  row.work_status  || 'ปฏิบัติงานอยู่',
+  department:  row.department   || '',
 });
 
 // ─── Public API ──────────────────────────────────────────────

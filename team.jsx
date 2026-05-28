@@ -8,6 +8,7 @@ const TeamForm = ({ initial, onSave, onCancel, onDirtyChange }) => {
     phone: "", email1: "", email2: "", food: "", religion: "พุทธ", license: "ประเภท 2",
     disease: "", bday: "", gender: "ชาย", mentor: "", line: "",
     avatar: "#5B5BD6", photo: null, emoji: null,
+    workStatus: "ปฏิบัติงานอยู่", department: "",
   });
   const [isDirty, setIsDirty] = useState(false);
   const markDirty = () => {
@@ -149,6 +150,21 @@ const TeamForm = ({ initial, onSave, onCancel, onDirtyChange }) => {
         <Field label="ศาสนา" en="Religion">
           <select title="ศาสนา" className="select" value={form.religion} onChange={e => set("religion", e.target.value)}>
             <option>พุทธ</option><option>คริสต์</option><option>อิสลาม</option><option>อื่นๆ</option>
+          </select>
+        </Field>
+        <Field label="สถานะการทำงาน" en="Work Status">
+          <select title="สถานะการทำงาน" className="select" value={form.workStatus || "ปฏิบัติงานอยู่"} onChange={e => set("workStatus", e.target.value)}>
+            <option>ปฏิบัติงานอยู่</option>
+            <option>ย้ายแผนก</option>
+            <option>ลาออก</option>
+          </select>
+        </Field>
+        <Field label="แผนก" en="Department">
+          <select title="แผนก" className="select" value={form.department || ""} onChange={e => set("department", e.target.value)}>
+            <option value="">— เลือก —</option>
+            <option>คลังข้อมูล</option>
+            <option>IM</option>
+            <option>BGS</option>
           </select>
         </Field>
       </div>

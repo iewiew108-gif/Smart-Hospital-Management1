@@ -25,6 +25,8 @@ create table if not exists team_members (
   avatar        text default '#5B5BD6',
   photo         text,
   emoji         text,
+  work_status   text default 'ปฏิบัติงานอยู่',
+  department    text,
   created_at    timestamptz default now(),
   updated_at    timestamptz default now()
 );
