@@ -234,6 +234,7 @@ const TeamScreen = ({ team, setTeam, hospitals, year }) => {
   };
 
   const filtered = team.filter(t => {
+    if (t.workStatus === "ลาออก") return false;
     const s = (t.fname + t.lname + t.nick + t.posFull).toLowerCase();
     return s.includes(q.toLowerCase());
   });
