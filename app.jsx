@@ -175,15 +175,13 @@ const App = () => {
   };
 
   // If not logged in, show login screen
-  // if (!isLoggedIn) {
-  //   return (
-  //     <ToastProvider>
-  //       <LoginScreen onLogin={() => {
-  //         setTimeout(() => setIsLoggedIn(true), 100);
-  //       }} />
-  //     </ToastProvider>
-  //   );
-  // }
+  if (!isLoggedIn) {
+    return (
+      <ToastProvider>
+        <LoginScreen onLogin={() => setIsLoggedIn(true)} />
+      </ToastProvider>
+    );
+  }
 
   const years = useMemo(() => Object.keys(targets).map(Number).sort(), [targets]);
   const yearHosps = hospitals.filter(h => h.year === year);
