@@ -1129,6 +1129,7 @@ const HospitalsScreen = ({ hospitals, setHospitals, team, year, focusId, onFocus
   const [q, setQ] = useState("");
   const [view, setView] = useState("table");
   const [filter, setFilter] = useState({ status: "", region: "", type: "", app: "", hosxp: "", db: "", workType: "" });
+  const [sortBy, setSortBy] = useState("");
   const [detailId, setDetailId] = useState(null);
   const [editing, setEditing] = useState(null);
   const toast = useToast();
@@ -1160,6 +1161,12 @@ const HospitalsScreen = ({ hospitals, setHospitals, team, year, focusId, onFocus
     if (filter.workType && h.workType !== filter.workType) return false;
     return true;
   });
+
+  const sorted = sortBy === "taiga_asc"
+    ? [...filtered].sort((a, b) => (a.taiga || "").localeCompare(b.taiga || ""))
+    : sortBy === "taiga_desc"
+    ? [...filtered].sort((a, b) => (b.taiga || "").localeCompare(a.taiga || ""))
+    : filtered;
 
   const detail = hospitals.find(h => h.id === detailId);
 
@@ -1251,8 +1258,13 @@ const HospitalsScreen = ({ hospitals, setHospitals, team, year, focusId, onFocus
             <option value="">ทุก Work Type</option>
             {WORK_TYPES.map(w => <option key={w}>{w}</option>)}
           </select>
+          <select title="เรียงลำดับ" className="select" style={{ width: "auto" }} value={sortBy} onChange={e => setSortBy(e.target.value)}>
+            <option value="">เรียง: ค่าเริ่มต้น</option>
+            <option value="taiga_asc">Taiga A → Z</option>
+            <option value="taiga_desc">Taiga Z → A</option>
+          </select>
           <div className="row-end">
-            <span className="tiny muted">{filtered.length} / {yearHospitals.length} รายการ</span>
+            <span className="tiny muted">{sorted.length} / {yearHospitals.length} รายการ</span>
             {(filter.status || filter.region || filter.type || filter.app || filter.hosxp || filter.db || filter.workType) && (
               <button className="btn btn-sm btn-ghost" onClick={() => setFilter({ status: "", region: "", type: "", app: "", hosxp: "", db: "", workType: "" })}>
                 <Icon name="close" size={12} /> Clear
@@ -1280,7 +1292,7 @@ const HospitalsScreen = ({ hospitals, setHospitals, team, year, focusId, onFocus
               </tr>
             </thead>
             <tbody>
-              {filtered.map(h => {
+              {sorted.map(h => {
                 const lead = team.find(t => t.id === h.lead);
                 const members = h.team.map(id => team.find(t => t.id === id)).filter(Boolean);
                 return (
@@ -1381,7 +1393,7 @@ const HospitalsScreen = ({ hospitals, setHospitals, team, year, focusId, onFocus
         </div>
       ) : (
         <div className="grid" style={{ gridTemplateColumns: "repeat(auto-fill, minmax(320px, 1fr))", gap: 14 }}>
-          {filtered.map(h => {
+          {sorted.map(h => {
             const lead = team.find(t => t.id === h.lead);
             const members = h.team.map(id => team.find(t => t.id === id)).filter(Boolean);
             return (
