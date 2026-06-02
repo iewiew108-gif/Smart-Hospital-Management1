@@ -3,11 +3,21 @@
 // =========================================================
 
 // Reports Screen
+const CONTACT_ROLES = [
+  { key: "doctor",   label: "แพทย์",        color: "#5B5BD6" },
+  { key: "admin",    label: "Admin",         color: "#3877B8" },
+  { key: "nurseIPD", label: "พยาบาล IPD",   color: "#B8546D" },
+  { key: "pharmacy", label: "เภสัชกร",      color: "#2A8F5E" },
+  { key: "stats",    label: "นักเวชสถิติ",  color: "#C97B1F" },
+];
+
 const ReportsScreen = ({ hospitals, targets, team }) => {
   const years = [...new Set(hospitals.map(h => h.year))].sort();
   const toast = useToast();
   const [selectedYearForMonthly, setSelectedYearForMonthly] = useState(null);
-  const [reportView, setReportView] = useState("summary"); // "summary" or "hospitals"
+  const [reportView, setReportView] = useState("summary");
+  const [contactYear, setContactYear] = useState("all");
+  const [contactQ, setContactQ] = useState("");
 
   // Yearly summary table
   const yearly = years.map(y => {
@@ -81,8 +91,138 @@ const ReportsScreen = ({ hospitals, targets, team }) => {
         </div>
       </div>
 
-      {/* Report View */}
-      <>
+      <Tabs
+        items={[
+          { value: "summary",  label: <span><Icon name="report" size={11} /> สรุปภาพรวม</span> },
+          { value: "contacts", label: <span><Icon name="phone" size={11} /> ทะเบียนผู้ติดต่อ</span> },
+        ]}
+        value={reportView}
+        onChange={setReportView}
+      />
+
+      {/* ── Contacts Report ── */}
+      {reportView === "contacts" && (() => {
+        const hospList = hospitals
+          .filter(h => contactYear === "all" || h.year === Number(contactYear))
+          .filter(h => {
+            const hasContacts =
+              (h.contactsAdmin || []).length > 0 ||
+              CONTACT_ROLES.some(r => ((h.contactsFollowup || {})[r.key] || []).length > 0);
+            if (!hasContacts) return false;
+            return h.name.toLowerCase().includes(contactQ.toLowerCase());
+          })
+          .sort((a, b) => a.name.localeCompare(b.name, "th"));
+
+        return (
+          <div className="stack" style={{ gap: 14 }}>
+            {/* Filter row */}
+            <div className="card card-pad" style={{ padding: 12 }}>
+              <div className="row" style={{ gap: 10, flexWrap: "wrap" }}>
+                <Icon name="filter" size={13} className="muted" />
+                <select title="ปี" className="select" style={{ width: "auto" }} value={contactYear} onChange={e => setContactYear(e.target.value)}>
+                  <option value="all">ทุกปี</option>
+                  {years.map(y => <option key={y} value={y}>ปี {y}</option>)}
+                </select>
+                <SearchBox value={contactQ} onChange={setContactQ} placeholder="ค้นหาชื่อโรงพยาบาล…" />
+                <span className="tiny muted">{hospList.length} โรงพยาบาล</span>
+              </div>
+            </div>
+
+            {hospList.length === 0 && (
+              <div className="card card-pad" style={{ textAlign: "center", color: "var(--muted)", padding: 40 }}>
+                ไม่พบโรงพยาบาลที่มีข้อมูลผู้ติดต่อ
+              </div>
+            )}
+
+            {hospList.map(h => {
+              const adminContacts = h.contactsAdmin || [];
+              const followup = h.contactsFollowup || {};
+              return (
+                <div key={h.id} className="card">
+                  {/* Hospital header */}
+                  <div className="card-head" style={{ background: "var(--surface-alt)" }}>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontWeight: 700, fontSize: 15 }}>{h.name}</div>
+                      <div className="row" style={{ gap: 8, marginTop: 2 }}>
+                        {h.code && <Chip kind="outline" className="mono">{h.code}</Chip>}
+                        {h.taiga && <Chip kind="outline" className="mono">{h.taiga}</Chip>}
+                        {h.province && <span className="tiny muted">{h.province}</span>}
+                        <Chip kind="outline">{h.year}</Chip>
+                      </div>
+                    </div>
+                  </div>
+                  <div style={{ padding: "12px 18px" }}>
+                    {/* Section A — ผู้ดูแลระบบ */}
+                    {adminContacts.length > 0 && (
+                      <div style={{ marginBottom: 14 }}>
+                        <div className="tiny bold" style={{ color: "var(--muted)", marginBottom: 6, textTransform: "uppercase", letterSpacing: 1 }}>
+                          A · ผู้ดูแลระบบ
+                        </div>
+                        <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 14 }}>
+                          <thead>
+                            <tr style={{ borderBottom: "1px solid var(--border-2)" }}>
+                              {["ชื่อ-นามสกุล","ตำแหน่ง","เบอร์โทร","Email"].map(h => (
+                                <th key={h} style={{ textAlign: "left", padding: "4px 10px 4px 0", fontWeight: 600, color: "var(--muted)", fontSize: 12 }}>{h}</th>
+                              ))}
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {adminContacts.map(c => (
+                              <tr key={c.id} style={{ borderBottom: "1px solid var(--border-2)" }}>
+                                <td style={{ padding: "6px 10px 6px 0", fontWeight: 600 }}>{c.name}</td>
+                                <td style={{ padding: "6px 10px 6px 0", color: "var(--muted)" }}>{c.pos || "—"}</td>
+                                <td style={{ padding: "6px 10px 6px 0" }} className="mono">{c.phone || "—"}</td>
+                                <td style={{ padding: "6px 0" }} className="mono">{c.email || "—"}</td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    )}
+
+                    {/* Section B — ผู้ติดต่อแยกตามตำแหน่ง */}
+                    {CONTACT_ROLES.map(role => {
+                      const contacts = (followup[role.key] || []);
+                      if (contacts.length === 0) return null;
+                      return (
+                        <div key={role.key} style={{ marginBottom: 12 }}>
+                          <div className="row" style={{ gap: 6, marginBottom: 6 }}>
+                            <span style={{ width: 8, height: 8, borderRadius: 99, background: role.color, flexShrink: 0 }} />
+                            <span className="tiny bold" style={{ color: role.color }}>{role.label}</span>
+                          </div>
+                          <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 14 }}>
+                            <thead>
+                              <tr style={{ borderBottom: "1px solid var(--border-2)" }}>
+                                {["ชื่อ-นามสกุล","ตำแหน่ง","เบอร์โทร","Email"].map(hd => (
+                                  <th key={hd} style={{ textAlign: "left", padding: "4px 10px 4px 0", fontWeight: 600, color: "var(--muted)", fontSize: 12 }}>{hd}</th>
+                                ))}
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {contacts.map(c => (
+                                <tr key={c.id} style={{ borderBottom: "1px solid var(--border-2)" }}>
+                                  <td style={{ padding: "6px 10px 6px 0", fontWeight: 600 }}>{c.name}</td>
+                                  <td style={{ padding: "6px 10px 6px 0", color: "var(--muted)" }}>{c.pos || "—"}</td>
+                                  <td style={{ padding: "6px 10px 6px 0" }} className="mono">{c.phone || "—"}</td>
+                                  <td style={{ padding: "6px 0" }} className="mono">{c.email || "—"}</td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        );
+      })()}
+
+      {/* ── Summary Report ── */}
+      {reportView === "summary" && <>
+
       {/* Summary KPIs */}
       <div className="grid" style={{ gridTemplateColumns: "repeat(4, 1fr)", gap: 14 }}>
         <KPI
@@ -333,7 +473,8 @@ const ReportsScreen = ({ hospitals, targets, team }) => {
           </div>
         </div>
       </div>
-        </>
+      </>}
+
     </div>
   );
 };
