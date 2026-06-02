@@ -1166,7 +1166,7 @@ const HospitalsScreen = ({ hospitals, setHospitals, team, year, focusId, onFocus
   const save = (form) => {
     formDirtyRef.current = false;
     if (editing === "new") {
-      const id = "h" + (hospitals.length === 0 ? 1 : Math.max(...hospitals.map(h => parseInt(h.id.slice(1)))) + 1);
+      const id = "h" + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
       setHospitals([...hospitals, { ...form, id }]);
       toast.push("เพิ่มโรงพยาบาลสำเร็จ");
     } else {
