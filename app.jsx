@@ -163,6 +163,13 @@ const App = () => {
     window.SupabaseDB.saveTargets(targets);
   }, [targets, dataLoaded]);
 
+  // ── Permissions ──────────────────────────────────────────
+  const userRole = (() => {
+    try { return JSON.parse(localStorage.getItem("currentUser") || "{}").role || "viewer"; }
+    catch { return "viewer"; }
+  })();
+  const perms = window.getPerms ? window.getPerms(userRole) : { canEdit: false, canEditTeam: false, canEditTargets: false };
+
   const handleLogout = () => {
     if (confirm("ต้องการออกจากระบบ?")) {
       localStorage.removeItem("isLoggedIn");
@@ -174,6 +181,12 @@ const App = () => {
     }
   };
 
+  // ── Hooks ต้องอยู่ก่อน early return ทุกตัว (React rules of hooks) ──
+  const years = useMemo(() => Object.keys(targets).map(Number).sort(), [targets]);
+  const yearHosps = hospitals.filter(h => h.year === year);
+  const reminders = useMemo(() => computeReminders(hospitals, team), [hospitals, team]);
+  const birthdayReminders = useMemo(() => computeBirthdayReminders(team), [team]);
+
   // If not logged in, show login screen
   if (!isLoggedIn) {
     return (
@@ -182,11 +195,6 @@ const App = () => {
       </ToastProvider>
     );
   }
-
-  const years = useMemo(() => Object.keys(targets).map(Number).sort(), [targets]);
-  const yearHosps = hospitals.filter(h => h.year === year);
-  const reminders = useMemo(() => computeReminders(hospitals, team), [hospitals, team]);
-  const birthdayReminders = useMemo(() => computeBirthdayReminders(team), [team]);
 
   const jumpToHospital = (id) => {
     const h = hospitals.find(x => x.id === id);
@@ -202,6 +210,7 @@ const App = () => {
     targets:   { title: "Annual Targets", sub: "ตั้งเป้าและเทียบยอดในแต่ละปี" },
     reports:   { title: "Reports", sub: "สรุปยอดและภาพรวมการติดตั้งระบบ" },
     summary:   { title: "Installation Summary", sub: "สรุปยอดติดตั้งตามช่วงวันที่" },
+    "leader-summary": { title: "สรุปยอดหัวหน้าทีม", sub: "สรุปยอดการติดตั้งแยกตามหัวหน้าทีมรายคน" },
     gateway:   { title: "Gateway Monitor", sub: `ติดตามสถานะการติดตั้ง Gateway และ Connection · ปี ${year}` },
     calendar:  { title: "Schedule", sub: "ปฏิทินงานติดตั้งและ Timeline" },
     "installation-calendar": { title: "Installation Calendar", sub: "ปฎิธินการติดตั้ง" },
@@ -284,6 +293,7 @@ const App = () => {
                 year={year}
                 focusId={focusHospitalId}
                 onFocusConsumed={() => setFocusHospitalId(null)}
+                canEdit={perms.canEdit}
               />
             )}
             {route === "team" && (
@@ -292,6 +302,7 @@ const App = () => {
                 setTeam={setTeam}
                 hospitals={hospitals}
                 year={year}
+                canEdit={perms.canEditTeam}
               />
             )}
             {route === "targets" && (
@@ -299,6 +310,7 @@ const App = () => {
                 targets={targets}
                 setTargets={setTargets}
                 hospitals={hospitals}
+                canEdit={perms.canEditTargets}
               />
             )}
             {route === "reports" && (
@@ -312,6 +324,13 @@ const App = () => {
               <InstallationSummaryDashboard
                 hospitals={hospitals}
                 team={team}
+              />
+            )}
+            {route === "leader-summary" && (
+              <TeamLeaderSummary
+                hospitals={hospitals}
+                team={team}
+                year={year}
               />
             )}
             {route === "calendar" && (

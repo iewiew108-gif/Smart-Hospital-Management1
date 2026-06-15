@@ -219,7 +219,7 @@ const TeamForm = ({ initial, onSave, onCancel, onDirtyChange }) => {
   );
 };
 
-const TeamScreen = ({ team, setTeam, hospitals, year }) => {
+const TeamScreen = ({ team, setTeam, hospitals, year, canEdit = true }) => {
   const [q, setQ] = useState("");
   const [view, setView] = useState("grid");
   const [statusFilter, setStatusFilter] = useState("ปฏิบัติงานอยู่");
@@ -289,9 +289,11 @@ const TeamScreen = ({ team, setTeam, hospitals, year }) => {
           <button className="btn" onClick={() => toast.push("ส่งออกข้อมูลทีมแล้ว (mock)")}>
             <Icon name="download" size={14} /> Export
           </button>
-          <button className="btn btn-accent" onClick={() => setEditing("new")}>
-            <Icon name="plus" size={14} /> เพิ่มทีมงาน
-          </button>
+          {canEdit && (
+            <button className="btn btn-accent" onClick={() => setEditing("new")}>
+              <Icon name="plus" size={14} /> เพิ่มทีมงาน
+            </button>
+          )}
         </div>
       </div>
 
@@ -299,14 +301,14 @@ const TeamScreen = ({ team, setTeam, hospitals, year }) => {
         <div className="grid" style={{ gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: 14 }}>
           {filtered.map(t => (
             <div key={t.id} className="card card-pad" style={{ position: "relative" }}>
-              <button
+              {canEdit && <button
                 className="btn btn-ghost btn-icon"
                 style={{ position: "absolute", top: 10, right: 10 }}
                 onClick={() => remove(t)}
                 title="ลบ"
               >
                 <Icon name="trash" size={14} />
-              </button>
+              </button>}
               <div className="row" style={{ alignItems: "flex-start", gap: 14, marginBottom: 12 }}>
                 {t.photo ? (
                   <img 
@@ -424,12 +426,14 @@ const TeamScreen = ({ team, setTeam, hospitals, year }) => {
                   <td>
                     <div className="row" style={{ gap: 4 }}>
                       <button className="btn btn-sm btn-ghost" onClick={() => setViewing(t)}>ดู</button>
-                      <button className="btn btn-sm btn-ghost" onClick={() => setEditing(t)}>
-                        <Icon name="edit" size={12} />
-                      </button>
-                      <button className="btn btn-sm btn-ghost" onClick={() => remove(t)}>
-                        <Icon name="trash" size={12} />
-                      </button>
+                      {canEdit && <>
+                        <button className="btn btn-sm btn-ghost" onClick={() => setEditing(t)}>
+                          <Icon name="edit" size={12} />
+                        </button>
+                        <button className="btn btn-sm btn-ghost" onClick={() => remove(t)}>
+                          <Icon name="trash" size={12} />
+                        </button>
+                      </>}
                     </div>
                   </td>
                 </tr>

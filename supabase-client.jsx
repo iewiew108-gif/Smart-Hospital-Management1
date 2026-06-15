@@ -114,6 +114,7 @@ const _memberToDb = (m) => ({
   emoji:       m.emoji       || null,
   work_status: m.workStatus  || 'ปฏิบัติงานอยู่',
   department:  m.department  || '',
+  role:        m.role        || 'member',
 });
 
 const _memberFromDb = (row) => ({
@@ -139,6 +140,7 @@ const _memberFromDb = (row) => ({
   emoji:       row.emoji        || null,
   workStatus:  row.work_status  || 'ปฏิบัติงานอยู่',
   department:  row.department   || '',
+  role:        row.role         || 'member',
 });
 
 // ─── Public API ──────────────────────────────────────────────

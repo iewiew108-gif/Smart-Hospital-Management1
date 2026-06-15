@@ -2,7 +2,7 @@
 // Annual Targets Screen
 // =========================================================
 
-const TargetsScreen = ({ targets, setTargets, hospitals }) => {
+const TargetsScreen = ({ targets, setTargets, hospitals, canEdit = true }) => {
   const [editing, setEditing] = useState(null);
   const toast = useToast();
   const years = Object.keys(targets).map(Number).sort();
@@ -23,9 +23,11 @@ const TargetsScreen = ({ targets, setTargets, hospitals }) => {
           <h1>เป้าหมายรายปี</h1>
           <div className="sub">ตั้งเป้าและเทียบยอดติดตั้งจริงในแต่ละปี</div>
         </div>
-        <button className="btn btn-accent" onClick={() => setEditing({ year: Math.max(...years) + 1, hospitals: 30, revenue: 80000000, isNew: true })}>
-          <Icon name="plus" size={14} /> ตั้งเป้าหมายปีใหม่
-        </button>
+        {canEdit && (
+          <button className="btn btn-accent" onClick={() => setEditing({ year: Math.max(...years) + 1, hospitals: 30, revenue: 80000000, isNew: true })}>
+            <Icon name="plus" size={14} /> ตั้งเป้าหมายปีใหม่
+          </button>
+        )}
       </div>
 
       <div className="grid" style={{ gridTemplateColumns: "repeat(auto-fit, minmax(340px, 1fr))", gap: 16 }}>
@@ -58,9 +60,11 @@ const TargetsScreen = ({ targets, setTargets, hospitals }) => {
                   </div>
                   <div className="row" style={{ gap: 4, marginTop: 6 }}>
                     <Chip kind={pctH >= 100 ? "success" : pctH >= 70 ? "warning" : "danger"}>{Math.round(pctH)}%</Chip>
-                    <button className="btn btn-sm btn-ghost" onClick={() => setEditing({ year: y, ...t })}>
-                      <Icon name="edit" size={11} /> แก้ไข
-                    </button>
+                    {canEdit && (
+                      <button className="btn btn-sm btn-ghost" onClick={() => setEditing({ year: y, ...t })}>
+                        <Icon name="edit" size={11} /> แก้ไข
+                      </button>
+                    )}
                   </div>
                 </div>
               </div>

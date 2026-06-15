@@ -375,36 +375,6 @@ const ReportsScreen = ({ hospitals, targets, team }) => {
         </div>
       </div>
 
-      {/* App popularity */}
-      <div className="card">
-        <div className="card-head">
-          <h3>Application ยอดนิยม</h3>
-          <div className="desc">% ของโรงพยาบาลทั้งหมดที่ติดตั้งแต่ละ App</div>
-        </div>
-        <div className="stack" style={{ padding: 14 }}>
-          {appData.map(a => (
-            <div key={a.id} className="row" style={{ gap: 12, padding: "6px 8px" }}>
-              <div className="app-pill" style={{ border: "none", padding: 0, background: "transparent", flexShrink: 0, width: 240 }}>
-                <div className="ico" style={{ background: a.color, color: "#fff" }}>{a.short}</div>
-                <div style={{ flex: 1 }}>
-                  <div className="nm">{a.name}</div>
-                  <div className="meta">{a.desc}</div>
-                </div>
-              </div>
-              <div style={{ flex: 1 }}>
-                <div className="progress thick">
-                  <span style={{ width: a.pct + "%", background: a.color }} />
-                </div>
-              </div>
-              <div className="display bold mono" style={{ fontSize: 16, width: 60, textAlign: "right" }}>
-                {a.count}
-              </div>
-              <div className="mono tiny muted" style={{ width: 38, textAlign: "right" }}>{a.pct}%</div>
-            </div>
-          ))}
-        </div>
-      </div>
-
       {/* Region + Type */}
       <div className="grid" style={{ gridTemplateColumns: "1fr 1fr", gap: 18 }}>
         <div className="card">

@@ -52,8 +52,9 @@ const LoginScreen = ({ onLogin }) => {
 
         const userInfo = member
           ? { id: member.id, name: `${member.fname} ${member.lname}`, nick: member.nick,
-              email: emailLower, avatar: member.avatar, posShort: member.posShort }
-          : { name: email, nick: email };
+              email: emailLower, avatar: member.avatar, posShort: member.posShort,
+              role: member.role || "member" }
+          : { name: email, nick: email, role: "viewer" };
 
         localStorage.setItem("isLoggedIn", "true");
         localStorage.setItem("currentUser", JSON.stringify(userInfo));

@@ -2,11 +2,19 @@
 // Installation Timeline - Gantt chart view
 // =========================================================
 
+const fmtThaiDate = (iso) => {
+  if (!iso) return "—";
+  const months = ["ม.ค.","ก.พ.","มี.ค.","เม.ย.","พ.ค.","มิ.ย.","ก.ค.","ส.ค.","ก.ย.","ต.ค.","พ.ย.","ธ.ค."];
+  const [y, m, d] = iso.split("-");
+  return `${parseInt(d,10)} ${months[parseInt(m,10)-1]} ${parseInt(y,10)+543}`;
+};
+
 const InstallationTimelineScreen = ({ hospitals, year, setYear, years, team }) => {
   const [filter, setFilter] = React.useState({ status: "", region: "", type: "" });
   const [viewMode, setViewMode] = React.useState("year"); // year, month, quarter, custom
   const [selectedMonth, setSelectedMonth] = React.useState(0);
   const [dateRange, setDateRange] = React.useState({ start: "01", end: "12" }); // for custom range
+  const [tooltip, setTooltip] = React.useState({ visible: false, x: 0, y: 0, h: null });
 
   // Filter hospitals by year
   const yearHospitals = hospitals.filter(h => new Date(h.start).getFullYear() === year);
@@ -223,21 +231,22 @@ const InstallationTimelineScreen = ({ hospitals, year, setYear, years, team }) =
                       height: "100%",
                       background: statusColor,
                       borderRadius: 4,
-                      opacity: 0.7,
+                      opacity: tooltip.h?.id === h.id ? 1 : 0.7,
                       display: "flex",
                       alignItems: "center",
                       paddingLeft: 8,
                       overflow: "hidden",
                       cursor: "pointer",
-                      transition: "opacity 0.2s",
+                      transition: "opacity 0.15s",
                     }}
-                    title={tooltipText}
                     onMouseEnter={(e) => {
-                      e.currentTarget.style.opacity = "0.9";
+                      const rect = e.currentTarget.getBoundingClientRect();
+                      setTooltip({ visible: true, x: rect.left + rect.width / 2, y: rect.top - 8, h });
                     }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.opacity = "0.7";
+                    onMouseMove={(e) => {
+                      setTooltip(t => ({ ...t, x: e.clientX, y: e.clientY - 10 }));
                     }}
+                    onMouseLeave={() => setTooltip({ visible: false, x: 0, y: 0, h: null })}
                   >
                     <span className="tiny bold" style={{ color: "white", whiteSpace: "nowrap" }}>
                       {h.weeks || "—"} {viewMode === "quarter" ? "สัปดาห์" : viewMode === "month" ? "วัน" : "สัปดาห์"}
@@ -274,6 +283,48 @@ const InstallationTimelineScreen = ({ hospitals, year, setYear, years, team }) =
           </div>
         </div>
       </div>
+
+      {/* Custom Tooltip */}
+      {tooltip.visible && tooltip.h && (
+        <div style={{
+          position: "fixed",
+          left: tooltip.x + 14,
+          top: tooltip.y - 60,
+          zIndex: 9999,
+          background: "#1e293b",
+          color: "#f8fafc",
+          borderRadius: 10,
+          padding: "10px 14px",
+          pointerEvents: "none",
+          boxShadow: "0 8px 24px rgba(0,0,0,0.25)",
+          minWidth: 210,
+          fontSize: 13,
+          lineHeight: 1.7,
+        }}>
+          <div style={{ fontWeight: 700, marginBottom: 6, fontSize: 14, color: "#e2e8f0" }}>
+            {tooltip.h.name}
+          </div>
+          <div style={{ display: "flex", gap: 8, alignItems: "center", color: "#94a3b8", fontSize: 12 }}>
+            <span style={{ color: "#4ade80", fontWeight: 600 }}>▶</span>
+            <span>เริ่มเข้าไซต์</span>
+            <span style={{ marginLeft: "auto", color: "#f8fafc", fontWeight: 600 }}>
+              {fmtThaiDate(tooltip.h.start)}
+            </span>
+          </div>
+          <div style={{ display: "flex", gap: 8, alignItems: "center", color: "#94a3b8", fontSize: 12 }}>
+            <span style={{ color: "#f87171", fontWeight: 600 }}>■</span>
+            <span>จบไซต์</span>
+            <span style={{ marginLeft: "auto", color: "#f8fafc", fontWeight: 600 }}>
+              {fmtThaiDate(tooltip.h.end)}
+            </span>
+          </div>
+          {tooltip.h.weeks > 0 && (
+            <div style={{ marginTop: 6, paddingTop: 6, borderTop: "1px solid #334155", fontSize: 11, color: "#64748b" }}>
+              ระยะเวลา {tooltip.h.weeks} สัปดาห์ · {tooltip.h.status || "—"}
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 };

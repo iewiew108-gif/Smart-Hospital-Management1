@@ -137,8 +137,8 @@ const ConnectionEditor = ({ hospital, team, onChange, onClose }) => {
   const toast = useToast();
   const copyFromMaster = (target) => {
     const m = c.serverMaster;
-    set([target], { ...c[target], ip: m.ip, db: m.db, user: m.user, pass: m.pass, dbType: m.dbType });
-    toast.push("คัดลอกข้อมูลจาก Server Master แล้ว");
+    set([target], { ...c[target], ip: m.ip, dbType: m.dbType });
+    toast.push("คัดลอก IP / DB Type จาก Server Master แล้ว");
   };
   const copyMgwIp = () => {
     set(["appTablet", "mobileGw"], c.mobileGateway.ip);
@@ -158,11 +158,8 @@ const ConnectionEditor = ({ hospital, team, onChange, onClose }) => {
       <div className="drawer-body">
         {/* 1. Server Master */}
         <ConnSection num="1" title="Connection Server Master" sub="HOSxP XE — Server หลัก" color="var(--accent)">
-          <div className="grid" style={{ gridTemplateColumns: "1fr 1fr 1fr 1fr", gap: 10 }}>
+          <div className="grid" style={{ gridTemplateColumns: "1fr 1fr", gap: 10 }}>
             <ConnField label="IP" value={c.serverMaster.ip} onChange={v => set(["serverMaster", "ip"], v)} placeholder="10.x.x.x" />
-            <ConnField label="DB" value={c.serverMaster.db} onChange={v => set(["serverMaster", "db"], v)} />
-            <ConnField label="USER" value={c.serverMaster.user} onChange={v => set(["serverMaster", "user"], v)} />
-            <ConnField label="PASS" value={c.serverMaster.pass} onChange={v => set(["serverMaster", "pass"], v)} />
             <div className="field">
               <label className="label">Type Database</label>
               <select className="select" value={c.serverMaster.dbType} onChange={e => set(["serverMaster", "dbType"], e.target.value)}>
@@ -186,11 +183,8 @@ const ConnectionEditor = ({ hospital, team, onChange, onClose }) => {
             <Icon name="download" size={11} /> คัดลอกจาก Master
           </button>}
         >
-          <div className="grid" style={{ gridTemplateColumns: "1fr 1fr 1fr 1fr", gap: 10 }}>
+          <div className="grid" style={{ gridTemplateColumns: "1fr 1fr", gap: 10 }}>
             <ConnField label="IP" value={c.serverImage.ip} onChange={v => set(["serverImage", "ip"], v)} />
-            <ConnField label="DB" value={c.serverImage.db} onChange={v => set(["serverImage", "db"], v)} />
-            <ConnField label="USER" value={c.serverImage.user} onChange={v => set(["serverImage", "user"], v)} />
-            <ConnField label="PASS" value={c.serverImage.pass} onChange={v => set(["serverImage", "pass"], v)} />
             <div className="field">
               <label className="label">Type Database</label>
               <select className="select" value={c.serverImage.dbType} onChange={e => set(["serverImage", "dbType"], e.target.value)}>
@@ -206,11 +200,8 @@ const ConnectionEditor = ({ hospital, team, onChange, onClose }) => {
             <Icon name="download" size={11} /> คัดลอกจาก Master
           </button>}
         >
-          <div className="grid" style={{ gridTemplateColumns: "1fr 1fr 1fr 1fr", gap: 10 }}>
+          <div className="grid" style={{ gridTemplateColumns: "1fr 1fr", gap: 10 }}>
             <ConnField label="IP" value={c.serverTraining.ip} onChange={v => set(["serverTraining", "ip"], v)} />
-            <ConnField label="DB" value={c.serverTraining.db} onChange={v => set(["serverTraining", "db"], v)} />
-            <ConnField label="USER" value={c.serverTraining.user} onChange={v => set(["serverTraining", "user"], v)} />
-            <ConnField label="PASS" value={c.serverTraining.pass} onChange={v => set(["serverTraining", "pass"], v)} />
             <div className="field">
               <label className="label">Type Database</label>
               <select className="select" value={c.serverTraining.dbType} onChange={e => set(["serverTraining", "dbType"], e.target.value)}>
@@ -321,11 +312,8 @@ const ConnectionEditor = ({ hospital, team, onChange, onClose }) => {
 
         {/* 9. Import PDF */}
         <ConnSection num="9" title="เครื่องสำหรับติดตั้ง BMS Import PDF Gateway" color="var(--c4)">
-          <div className="grid" style={{ gridTemplateColumns: "1fr 1fr 1fr 1fr", gap: 10 }}>
+          <div className="grid" style={{ gridTemplateColumns: "1fr 1fr", gap: 10 }}>
             <ConnField label="IP" value={c.importPdf.ip} onChange={v => set(["importPdf", "ip"], v)} />
-            <ConnField label="DB" value={c.importPdf.db} onChange={v => set(["importPdf", "db"], v)} />
-            <ConnField label="USER" value={c.importPdf.user} onChange={v => set(["importPdf", "user"], v)} />
-            <ConnField label="PASS" value={c.importPdf.pass} onChange={v => set(["importPdf", "pass"], v)} />
             <div className="field">
               <label className="label">Type Database</label>
               <select className="select" value={c.importPdf.dbType} onChange={e => set(["importPdf", "dbType"], e.target.value)}>
@@ -346,11 +334,8 @@ const ConnectionEditor = ({ hospital, team, onChange, onClose }) => {
 
         {/* 10. LINE Official Gateway */}
         <ConnSection num="10" title="เครื่องสำหรับติดตั้ง HOSxP Line Official Gateway" color="#06C755">
-          <div className="grid" style={{ gridTemplateColumns: "1fr 1fr 1fr 1fr", gap: 10 }}>
+          <div className="grid" style={{ gridTemplateColumns: "1fr 1fr", gap: 10 }}>
             <ConnField label="IP" value={c.lineGateway.ip} onChange={v => set(["lineGateway", "ip"], v)} />
-            <ConnField label="DB" value={c.lineGateway.db} onChange={v => set(["lineGateway", "db"], v)} />
-            <ConnField label="USER" value={c.lineGateway.user} onChange={v => set(["lineGateway", "user"], v)} />
-            <ConnField label="PASS" value={c.lineGateway.pass} onChange={v => set(["lineGateway", "pass"], v)} />
             <div className="field">
               <label className="label">Type Database</label>
               <select className="select" value={c.lineGateway.dbType} onChange={e => set(["lineGateway", "dbType"], e.target.value)}>

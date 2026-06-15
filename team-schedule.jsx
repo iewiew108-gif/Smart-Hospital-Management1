@@ -2,10 +2,18 @@
 // Team Schedule - Timeline รายคน Onsite
 // =========================================================
 
+const fmtThaiDateSched = (iso) => {
+  if (!iso) return "—";
+  const months = ["ม.ค.","ก.พ.","มี.ค.","เม.ย.","พ.ค.","มิ.ย.","ก.ค.","ส.ค.","ก.ย.","ต.ค.","พ.ย.","ธ.ค."];
+  const [y, m, d] = iso.split("-");
+  return `${parseInt(d,10)} ${months[parseInt(m,10)-1]} ${parseInt(y,10)+543}`;
+};
+
 const TeamScheduleScreen = ({ hospitals, year, setYear, years, team }) => {
   const [sortBy, setSortBy] = React.useState("name"); // name, onsite-days, current-active
   const [viewMode, setViewMode] = React.useState("year"); // year, month, quarter
   const [selectedMonth, setSelectedMonth] = React.useState(new Date().getMonth());
+  const [tooltip, setTooltip] = React.useState({ visible: false, x: 0, y: 0, range: null });
 
   // Filter hospitals by year
   const yearHospitals = hospitals.filter((h) => new Date(h.start).getFullYear() === year);
@@ -25,7 +33,7 @@ const TeamScheduleScreen = ({ hospitals, year, setYear, years, team }) => {
       const end = new Date(h.end);
       const days = (end - start) / (1000 * 60 * 60 * 24);
       totalDays += days;
-      dateRanges.push({ start, end, hospital: h.name });
+      dateRanges.push({ start, end, hospital: h.name, startIso: h.start, endIso: h.end });
     });
 
     // Check if currently active (onsite now)
@@ -232,11 +240,11 @@ const TeamScheduleScreen = ({ hospitals, year, setYear, years, team }) => {
                   {filteredRanges.map((range, i) => {
                       const style = getTimelineStyle(range.start, range.end);
                       const isCurrentProject = member.currentProject?.name === range.hospital;
+                      const isHovered = tooltip.range === range;
 
                       return (
                         <div
                           key={i}
-                          title={range.hospital}
                           style={{
                             position: "absolute",
                             left: style.left,
@@ -245,20 +253,24 @@ const TeamScheduleScreen = ({ hospitals, year, setYear, years, team }) => {
                             top: 6,
                             background: isCurrentProject ? "var(--primary)" : "var(--accent)",
                             borderRadius: 3,
-                            opacity: isCurrentProject ? 1 : 0.6,
+                            opacity: isHovered ? 1 : isCurrentProject ? 1 : 0.6,
                             display: "flex",
                             alignItems: "center",
                             paddingLeft: 6,
                             paddingRight: 6,
                             overflow: "hidden",
-                            cursor: "pointer", fontSize: "12px"
-                          }}>
-                      
-                        <span className="tiny bold" style={{ color: "white", whiteSpace: "nowrap", fontSize: "12px" }}>
-                          {range.hospital.substring(0, 12)}
-                        </span>
-                      </div>);
-
+                            cursor: "pointer",
+                            fontSize: "12px",
+                            transition: "opacity 0.15s",
+                          }}
+                          onMouseEnter={(e) => setTooltip({ visible: true, x: e.clientX, y: e.clientY, range })}
+                          onMouseMove={(e)  => setTooltip(t => ({ ...t, x: e.clientX, y: e.clientY }))}
+                          onMouseLeave={()  => setTooltip({ visible: false, x: 0, y: 0, range: null })}
+                        >
+                          <span className="tiny bold" style={{ color: "white", whiteSpace: "nowrap", fontSize: "12px" }}>
+                            {range.hospital.substring(0, 12)}
+                          </span>
+                        </div>);
                     })}
                 </div>
 
@@ -337,6 +349,43 @@ const TeamScheduleScreen = ({ hospitals, year, setYear, years, team }) => {
           </div>
         </div>
       </div>
+
+      {/* Custom Tooltip */}
+      {tooltip.visible && tooltip.range && (
+        <div style={{
+          position: "fixed",
+          left: tooltip.x + 14,
+          top: tooltip.y - 80,
+          zIndex: 9999,
+          background: "#1e293b",
+          color: "#f8fafc",
+          borderRadius: 10,
+          padding: "10px 14px",
+          pointerEvents: "none",
+          boxShadow: "0 8px 24px rgba(0,0,0,0.25)",
+          minWidth: 220,
+          fontSize: 13,
+          lineHeight: 1.7,
+        }}>
+          <div style={{ fontWeight: 700, marginBottom: 6, fontSize: 14, color: "#e2e8f0" }}>
+            {tooltip.range.hospital}
+          </div>
+          <div style={{ display: "flex", gap: 8, alignItems: "center", color: "#94a3b8", fontSize: 12 }}>
+            <span style={{ color: "#4ade80", fontWeight: 600 }}>▶</span>
+            <span>เริ่มเข้าไซต์</span>
+            <span style={{ marginLeft: "auto", color: "#f8fafc", fontWeight: 600 }}>
+              {fmtThaiDateSched(tooltip.range.startIso)}
+            </span>
+          </div>
+          <div style={{ display: "flex", gap: 8, alignItems: "center", color: "#94a3b8", fontSize: 12 }}>
+            <span style={{ color: "#f87171", fontWeight: 600 }}>■</span>
+            <span>จบไซต์</span>
+            <span style={{ marginLeft: "auto", color: "#f8fafc", fontWeight: 600 }}>
+              {fmtThaiDateSched(tooltip.range.endIso)}
+            </span>
+          </div>
+        </div>
+      )}
     </div>);
 
 };

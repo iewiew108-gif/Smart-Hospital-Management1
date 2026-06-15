@@ -791,7 +791,7 @@ const HospitalForm = ({ initial, team, onSave, onCancel, onDirtyChange }) => {
   );
 };
 
-const HospitalDetail = ({ hospital, team, onEdit, onClose, onToggleApp }) => {
+const HospitalDetail = ({ hospital, team, onEdit, onClose, onToggleApp, canEdit = true }) => {
   const lead = team.find(t => t.id === hospital.lead);
   const members = hospital.team.map(id => team.find(t => t.id === id)).filter(Boolean);
   const totalDays = hospital.start && hospital.end ? Math.round((new Date(hospital.end) - new Date(hospital.start)) / 86400000) : 0;
@@ -819,7 +819,7 @@ const HospitalDetail = ({ hospital, team, onEdit, onClose, onToggleApp }) => {
             <span className="tiny muted">· {hospital.province}</span>
           </div>
         </div>
-        <button className="btn" onClick={onEdit}><Icon name="edit" size={12} /> แก้ไข</button>
+        {canEdit && <button className="btn" onClick={onEdit}><Icon name="edit" size={12} /> แก้ไข</button>}
       </div>
       <div className="drawer-body">
         {/* Summary cards */}
@@ -1125,11 +1125,11 @@ const HospitalDetail = ({ hospital, team, onEdit, onClose, onToggleApp }) => {
   );
 };
 
-const HospitalsScreen = ({ hospitals, setHospitals, team, year, focusId, onFocusConsumed }) => {
+const HospitalsScreen = ({ hospitals, setHospitals, team, year, focusId, onFocusConsumed, canEdit = true }) => {
   const [q, setQ] = useState("");
   const [view, setView] = useState("table");
   const [filter, setFilter] = useState({ status: "", region: "", type: "", app: "", hosxp: "", db: "", workType: "" });
-  const [sortBy, setSortBy] = useState("");
+  const [sortBy, setSortBy] = useState("start_asc");
   const [detailId, setDetailId] = useState(null);
   const [editing, setEditing] = useState(null);
   const toast = useToast();
@@ -1162,11 +1162,15 @@ const HospitalsScreen = ({ hospitals, setHospitals, team, year, focusId, onFocus
     return true;
   });
 
-  const sorted = sortBy === "taiga_asc"
-    ? [...filtered].sort((a, b) => (a.taiga || "").localeCompare(b.taiga || ""))
-    : sortBy === "taiga_desc"
-    ? [...filtered].sort((a, b) => (b.taiga || "").localeCompare(a.taiga || ""))
-    : filtered;
+  const sorted = (() => {
+    const arr = [...filtered];
+    if (sortBy === "start_asc")  return arr.sort((a, b) => (a.start || "9999").localeCompare(b.start || "9999"));
+    if (sortBy === "start_desc") return arr.sort((a, b) => (b.start || "").localeCompare(a.start || ""));
+    if (sortBy === "taiga_asc")  return arr.sort((a, b) => (a.taiga || "").localeCompare(b.taiga || ""));
+    if (sortBy === "taiga_desc") return arr.sort((a, b) => (b.taiga || "").localeCompare(a.taiga || ""));
+    if (sortBy === "name_asc")   return arr.sort((a, b) => a.name.localeCompare(b.name));
+    return arr.sort((a, b) => (a.start || "9999").localeCompare(b.start || "9999"));
+  })();
 
   const detail = hospitals.find(h => h.id === detailId);
 
@@ -1219,9 +1223,11 @@ const HospitalsScreen = ({ hospitals, setHospitals, team, year, focusId, onFocus
           <button className="btn" onClick={() => toast.push("ส่งออก CSV แล้ว (mock)")}>
             <Icon name="download" size={14} /> Export
           </button>
-          <button className="btn btn-accent" onClick={() => setEditing("new")}>
-            <Icon name="plus" size={14} /> เพิ่มโรงพยาบาล
-          </button>
+          {canEdit && (
+            <button className="btn btn-accent" onClick={() => setEditing("new")}>
+              <Icon name="plus" size={14} /> เพิ่มโรงพยาบาล
+            </button>
+          )}
         </div>
       </div>
 
@@ -1259,9 +1265,11 @@ const HospitalsScreen = ({ hospitals, setHospitals, team, year, focusId, onFocus
             {WORK_TYPES.map(w => <option key={w}>{w}</option>)}
           </select>
           <select title="เรียงลำดับ" className="select" style={{ width: "auto" }} value={sortBy} onChange={e => setSortBy(e.target.value)}>
-            <option value="">เรียง: ค่าเริ่มต้น</option>
-            <option value="taiga_asc">Taiga A → Z</option>
-            <option value="taiga_desc">Taiga Z → A</option>
+            <option value="start_asc">เรียง: วันเริ่มติดตั้ง ↑</option>
+            <option value="start_desc">เรียง: วันเริ่มติดตั้ง ↓</option>
+            <option value="name_asc">เรียง: ชื่อ ก → ฮ</option>
+            <option value="taiga_asc">เรียง: Taiga A → Z</option>
+            <option value="taiga_desc">เรียง: Taiga Z → A</option>
           </select>
           <div className="row-end">
             <span className="tiny muted">{sorted.length} / {yearHospitals.length} รายการ</span>
@@ -1295,10 +1303,29 @@ const HospitalsScreen = ({ hospitals, setHospitals, team, year, focusId, onFocus
               {sorted.map(h => {
                 const lead = team.find(t => t.id === h.lead);
                 const members = h.team.map(id => team.find(t => t.id === id)).filter(Boolean);
+                const now = new Date();
+                const isThisMonth = h.start && (() => {
+                  const d = new Date(h.start);
+                  return d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth();
+                })();
                 return (
-                  <tr key={h.id} onClick={() => setDetailId(h.id)} style={{ cursor: "pointer" }}>
+                  <tr key={h.id} onClick={() => setDetailId(h.id)} style={{
+                    cursor: "pointer",
+                    background: isThisMonth ? "#fffbeb" : undefined,
+                    boxShadow: isThisMonth ? "inset 4px 0 0 #f59e0b" : undefined,
+                  }}>
                     <td>
-                      <div style={{ fontWeight: 600 }}>{h.name}</div>
+                      <div style={{ display: "flex", alignItems: "center", gap: 7 }}>
+                        {isThisMonth && (
+                          <span style={{
+                            display: "inline-block", padding: "1px 7px",
+                            background: "#f59e0b", color: "#fff",
+                            borderRadius: 10, fontSize: 10, fontWeight: 700,
+                            whiteSpace: "nowrap", flexShrink: 0,
+                          }}>เดือนนี้</span>
+                        )}
+                        <div style={{ fontWeight: 600 }}>{h.name}</div>
+                      </div>
                       <div className="tiny muted">{h.province} · {h.type}</div>
                     </td>
                     <td>
@@ -1375,9 +1402,11 @@ const HospitalsScreen = ({ hospitals, setHospitals, team, year, focusId, onFocus
                       )}
                     </td>
                     <td>
-                      <button className="btn btn-sm btn-ghost" onClick={(e) => { e.stopPropagation(); remove(h); }}>
-                        <Icon name="trash" size={12} />
-                      </button>
+                      {canEdit && (
+                        <button className="btn btn-sm btn-ghost" onClick={(e) => { e.stopPropagation(); remove(h); }}>
+                          <Icon name="trash" size={12} />
+                        </button>
+                      )}
                     </td>
                   </tr>
                 );
@@ -1488,6 +1517,7 @@ const HospitalsScreen = ({ hospitals, setHospitals, team, year, focusId, onFocus
             onEdit={() => setEditing(detail)}
             onClose={() => setDetailId(null)}
             onToggleApp={(appId) => toggleApp(detail.id, appId)}
+            canEdit={canEdit}
           />
         )}
       </Drawer>
