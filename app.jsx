@@ -85,6 +85,10 @@ const App = () => {
   const [dismissedReminders, setDismissedReminders] = useState([]);
   const [sentReminders, setSentReminders] = useState([]);
   const [focusHospitalId, setFocusHospitalId] = useState(null);
+  const [userRole, setUserRole] = useState(() => {
+    try { return JSON.parse(localStorage.getItem("currentUser") || "{}").role || "viewer"; }
+    catch { return "viewer"; }
+  });
 
   // ── โหลดข้อมูลจาก Supabase ครั้งแรก ──────────────────────
   useEffect(() => {
@@ -103,6 +107,20 @@ const App = () => {
       prevHospitalsRef.current = hospitals;
       setDataLoaded(true);
       setLoading(false);
+
+      // ── sync role จาก Supabase ลง localStorage แล้ว update state ──
+      try {
+        const stored = JSON.parse(localStorage.getItem("currentUser") || "{}");
+        if (stored.id) {
+          const fresh = team.find(m => m.id === stored.id);
+          if (fresh && fresh.role) {
+            if (fresh.role !== stored.role) {
+              localStorage.setItem("currentUser", JSON.stringify({ ...stored, role: fresh.role }));
+            }
+            setUserRole(fresh.role);
+          }
+        }
+      } catch (_) {}
     }).catch(err => {
       console.error('[Supabase] loadAll failed:', err);
       setTeam(window.SEED_TEAM);
@@ -164,10 +182,6 @@ const App = () => {
   }, [targets, dataLoaded]);
 
   // ── Permissions ──────────────────────────────────────────
-  const userRole = (() => {
-    try { return JSON.parse(localStorage.getItem("currentUser") || "{}").role || "viewer"; }
-    catch { return "viewer"; }
-  })();
   const perms = window.getPerms ? window.getPerms(userRole) : { canEdit: false, canEditTeam: false, canEditTargets: false };
 
   const handleLogout = () => {
