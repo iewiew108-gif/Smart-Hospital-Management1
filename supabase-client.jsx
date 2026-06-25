@@ -143,6 +143,32 @@ const _memberFromDb = (row) => ({
   role:        row.role         || 'member',
 });
 
+const _packageToDb = (p) => ({
+  id:              p.id,
+  hospital_id:     p.hospitalId     || '',
+  beds:            p.beds           || null,
+  package_type:    p.packageType    || '',
+  sent_status:     p.sentStatus     || 'Not Sent',
+  sent_date:       p.sentDate       || null,
+  purchase_status: p.purchaseStatus || '',
+  note:            p.note           || '',
+  contacts:        p.contacts       || [],
+  owner_team:      p.ownerTeam      || [],
+});
+
+const _packageFromDb = (row) => ({
+  id:             row.id,
+  hospitalId:     row.hospital_id     || '',
+  beds:           row.beds            || null,
+  packageType:    row.package_type    || '',
+  sentStatus:     row.sent_status     || 'Not Sent',
+  sentDate:       row.sent_date       || '',
+  purchaseStatus: row.purchase_status || '',
+  note:           row.note            || '',
+  contacts:       row.contacts        || [],
+  ownerTeam:      row.owner_team      || [],
+});
+
 // ─── Public API ──────────────────────────────────────────────
 
 window.SupabaseDB = {
@@ -155,25 +181,29 @@ window.SupabaseDB = {
         team:      [],
         hospitals: [],
         targets:   { 2026: { hospitals: 0, revenue: 0 } },
+        packages:  [],
       };
     }
-    const [teamRes, hospsRes, targetsRes] = await Promise.all([
+    const [teamRes, hospsRes, targetsRes, pkgRes] = await Promise.all([
       _sb.from('team_members').select('*').order('fname'),
       _sb.from('hospitals').select('*').order('year', { ascending: false }),
       _sb.from('targets').select('*').order('year'),
+      _sb.from('hospital_packages').select('*'),
     ]);
     if (teamRes.error)    console.error('[Supabase] team_members:', teamRes.error);
     if (hospsRes.error)   console.error('[Supabase] hospitals:', hospsRes.error);
     if (targetsRes.error) console.error('[Supabase] targets:', targetsRes.error);
+    if (pkgRes.error)     console.error('[Supabase] hospital_packages:', pkgRes.error);
 
     const team      = (teamRes.data   || []).map(_memberFromDb);
     const hospitals = (hospsRes.data  || []).map(_hospitalFromDb);
+    const packages  = (pkgRes.data    || []).map(_packageFromDb);
     const tRows     =  targetsRes.data || [];
     const targets   = tRows.length
       ? Object.fromEntries(tRows.map(r => [r.year, { hospitals: r.hospitals, revenue: r.revenue }]))
       : { 2026: { hospitals: 0, revenue: 0 } };
 
-    return { team, hospitals, targets };
+    return { team, hospitals, targets, packages };
   },
 
   // Hospital CRUD
@@ -198,6 +228,18 @@ window.SupabaseDB = {
     if (!_isConfigured) return;
     const { error } = await _sb.from('team_members').delete().eq('id', id);
     if (error) console.error('[Supabase] deleteMember:', error);
+  },
+
+  // Package CRUD
+  async upsertPackage(p) {
+    if (!_isConfigured) return;
+    const { error } = await _sb.from('hospital_packages').upsert(_packageToDb(p));
+    if (error) console.error('[Supabase] upsertPackage:', error);
+  },
+  async deletePackage(id) {
+    if (!_isConfigured) return;
+    const { error } = await _sb.from('hospital_packages').delete().eq('id', id);
+    if (error) console.error('[Supabase] deletePackage:', error);
   },
 
   // Targets

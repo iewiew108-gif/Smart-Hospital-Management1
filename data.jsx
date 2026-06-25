@@ -70,6 +70,21 @@ const TARGETS = {
 // Hospitals
 const HOSPITALS = [];
 
+// Packages (การส่ง/การซื้อ Package)
+const PACKAGES = [];
+
+// ── Mapping ราคา Package ตามขนาด/จำนวนเตียง ───────────────
+const PACKAGE_BED_OPTIONS = [
+  { beds: 30,  label: "≤ 30 เตียง", price: 27000  },
+  { beds: 60,  label: "60 เตียง",   price: 36000  },
+  { beds: 90,  label: "90 เตียง",   price: 46000  },
+  { beds: 120, label: "120 เตียง",  price: 72800  },
+  { beds: 200, label: "200 เตียง",  price: 138000 },
+  { beds: 300, label: "300 เตียง",  price: 220000 },
+];
+const PACKAGE_SENT_STATUS  = ["Not Sent", "Sent"];
+const PACKAGE_CHANNELS     = ["LINE", "อีเมล", "โทรศัพท์", "Onsite", "อื่น ๆ"];
+
 // Make data mutable
 window.APPS_CATALOG = APPS_CATALOG;
 window.HOSPITAL_TYPES = HOSPITAL_TYPES;
@@ -79,6 +94,20 @@ window.ADVANCE_STATUS = ADVANCE_STATUS;
 window.SEED_TEAM = TEAM;
 window.SEED_HOSPITALS = HOSPITALS;
 window.SEED_TARGETS = TARGETS;
+window.SEED_PACKAGES = PACKAGES;
+window.PACKAGE_BED_OPTIONS = PACKAGE_BED_OPTIONS;
+window.PACKAGE_SENT_STATUS = PACKAGE_SENT_STATUS;
+window.PACKAGE_CHANNELS = PACKAGE_CHANNELS;
+
+// ราคา Package จากจำนวนเตียง (คืน 0 ถ้ายังไม่เลือก)
+window.getPackagePrice = (beds) => {
+  const opt = PACKAGE_BED_OPTIONS.find(o => o.beds === Number(beds));
+  return opt ? opt.price : 0;
+};
+window.getBedLabel = (beds) => {
+  const opt = PACKAGE_BED_OPTIONS.find(o => o.beds === Number(beds));
+  return opt ? opt.label : "—";
+};
 
 // Helpers
 window.fmtBahtShort = (n) => {

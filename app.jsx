@@ -75,10 +75,12 @@ const App = () => {
   const [team, setTeam]           = useState([]);
   const [hospitals, setHospitals] = useState([]);
   const [targets, setTargets]     = useState(window.SEED_TARGETS);
+  const [packages, setPackages]   = useState([]);
   const [loading, setLoading]     = useState(window.SupabaseDB?.isConfigured === true);
   const [dataLoaded, setDataLoaded] = useState(false);
   const prevHospitalsRef = React.useRef(null);
   const prevTeamRef      = React.useRef(null);
+  const prevPackagesRef  = React.useRef(null);
 
   const [route, setRoute] = useState("dashboard");
   const [year, setYear] = useState(2026);
@@ -96,15 +98,18 @@ const App = () => {
       setTeam(window.SEED_TEAM);
       setHospitals(window.SEED_HOSPITALS);
       setTargets(window.SEED_TARGETS);
+      setPackages(window.SEED_PACKAGES || []);
       setDataLoaded(true);
       return;
     }
-    window.SupabaseDB.loadAll().then(({ team, hospitals, targets }) => {
+    window.SupabaseDB.loadAll().then(({ team, hospitals, targets, packages }) => {
       setTeam(team);
       setHospitals(hospitals);
       setTargets(targets);
+      setPackages(packages || []);
       prevTeamRef.current      = team;
       prevHospitalsRef.current = hospitals;
+      prevPackagesRef.current  = packages || [];
       setDataLoaded(true);
       setLoading(false);
 
@@ -126,6 +131,7 @@ const App = () => {
       setTeam(window.SEED_TEAM);
       setHospitals(window.SEED_HOSPITALS);
       setTargets(window.SEED_TARGETS);
+      setPackages(window.SEED_PACKAGES || []);
       setDataLoaded(true);
       setLoading(false);
     });
@@ -175,6 +181,28 @@ const App = () => {
     prevTeamRef.current = team;
   }, [team, dataLoaded]);
 
+  // ── Sync packages → Supabase เมื่อข้อมูลเปลี่ยน ─────────
+  useEffect(() => {
+    if (!dataLoaded || !window.SupabaseDB?.isConfigured) return;
+    const prev = prevPackagesRef.current;
+    if (!prev) { prevPackagesRef.current = packages; return; }
+
+    if (packages.length > prev.length) {
+      const added = packages.filter(p => !prev.find(x => x.id === p.id));
+      added.forEach(p => window.SupabaseDB.upsertPackage(p));
+    } else if (packages.length < prev.length) {
+      const removed = prev.filter(x => !packages.find(c => c.id === x.id));
+      removed.forEach(p => window.SupabaseDB.deletePackage(p.id));
+    } else {
+      const updated = packages.filter(p => {
+        const x = prev.find(x => x.id === p.id);
+        return x && JSON.stringify(x) !== JSON.stringify(p);
+      });
+      updated.forEach(p => window.SupabaseDB.upsertPackage(p));
+    }
+    prevPackagesRef.current = packages;
+  }, [packages, dataLoaded]);
+
   // ── Sync targets → Supabase เมื่อข้อมูลเปลี่ยน ──────────
   useEffect(() => {
     if (!dataLoaded || !window.SupabaseDB?.isConfigured) return;
@@ -205,7 +233,14 @@ const App = () => {
   if (!isLoggedIn) {
     return (
       <ToastProvider>
-        <LoginScreen onLogin={() => setIsLoggedIn(true)} />
+        <LoginScreen onLogin={() => {
+          // อัปเดต userRole ทันทีหลัง login (ไม่ต้องรอ reload)
+          try {
+            const u = JSON.parse(localStorage.getItem("currentUser") || "{}");
+            if (u.role) setUserRole(u.role);
+          } catch (_) {}
+          setIsLoggedIn(true);
+        }} />
       </ToastProvider>
     );
   }
@@ -222,6 +257,7 @@ const App = () => {
     hospitals: { title: "Hospitals", sub: `รายชื่อโรงพยาบาลที่ติดตั้งระบบในปี ${year}` },
     team:      { title: "Team Members", sub: "สมาชิกทีมและตารางงาน" },
     targets:   { title: "Annual Targets", sub: "ตั้งเป้าและเทียบยอดในแต่ละปี" },
+    package:   { title: "Package Paperless", sub: `ติดตามการส่ง / การซื้อ Package — ปี ${year}` },
     reports:   { title: "Reports", sub: "สรุปยอดและภาพรวมการติดตั้งระบบ" },
     summary:   { title: "Installation Summary", sub: "สรุปยอดติดตั้งตามช่วงวันที่" },
     "leader-summary": { title: "สรุปยอดหัวหน้าทีม", sub: "สรุปยอดการติดตั้งแยกตามหัวหน้าทีมรายคน" },
@@ -236,6 +272,8 @@ const App = () => {
   const counts = {
     team: team.length,
     hospitals: yearHosps.length,
+    packagesSent: packages.filter(p => p.sentStatus === "Sent" &&
+      yearHosps.find(h => h.id === p.hospitalId)).length || null,
   };
 
   if (loading) {
@@ -317,6 +355,7 @@ const App = () => {
                 hospitals={hospitals}
                 year={year}
                 canEdit={perms.canEditTeam}
+                isAdmin={userRole === "admin"}
               />
             )}
             {route === "targets" && (
@@ -325,6 +364,16 @@ const App = () => {
                 setTargets={setTargets}
                 hospitals={hospitals}
                 canEdit={perms.canEditTargets}
+              />
+            )}
+            {route === "package" && (
+              <PackageScreen
+                hospitals={hospitals}
+                packages={packages}
+                setPackages={setPackages}
+                team={team}
+                year={year}
+                canEdit={perms.canEdit}
               />
             )}
             {route === "reports" && (

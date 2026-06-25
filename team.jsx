@@ -219,7 +219,38 @@ const TeamForm = ({ initial, onSave, onCancel, onDirtyChange }) => {
   );
 };
 
-const TeamScreen = ({ team, setTeam, hospitals, year, canEdit = true }) => {
+const RolePill = ({ role, isAdmin, onChange }) => {
+  const ri = window.getRoleLabel ? window.getRoleLabel(role || "member") : { label: role || "member", color: "#94a3b8" };
+  if (isAdmin) {
+    return (
+      <select
+        value={role || "member"}
+        onChange={e => onChange(e.target.value)}
+        title="เปลี่ยนสิทธิ์"
+        style={{
+          fontSize: 11, fontWeight: 700, padding: "2px 8px", borderRadius: 8,
+          border: "none", cursor: "pointer", outline: "none",
+          background: ri.color, color: "#fff", appearance: "none",
+          paddingRight: 20, backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 24 24'%3E%3Cpath fill='white' d='M7 10l5 5 5-5z'/%3E%3C/svg%3E")`,
+          backgroundRepeat: "no-repeat", backgroundPosition: "right 4px center",
+        }}
+      >
+        {["admin","lead","member","viewer"].map(r => {
+          const info = window.getRoleLabel ? window.getRoleLabel(r) : { label: r };
+          return <option key={r} value={r}>{info.label}</option>;
+        })}
+      </select>
+    );
+  }
+  return (
+    <span style={{
+      display: "inline-block", fontSize: 11, fontWeight: 700,
+      padding: "2px 8px", borderRadius: 8, background: ri.color, color: "#fff",
+    }}>{ri.label}</span>
+  );
+};
+
+const TeamScreen = ({ team, setTeam, hospitals, year, canEdit = true, isAdmin = false }) => {
   const [q, setQ] = useState("");
   const [view, setView] = useState("grid");
   const [statusFilter, setStatusFilter] = useState("ปฏิบัติงานอยู่");
@@ -242,6 +273,13 @@ const TeamScreen = ({ team, setTeam, hospitals, year, canEdit = true }) => {
 
   const loadFor = (id) => hospitals.filter(h => h.year === year && h.team.includes(id)).length;
   const isLeadFor = (id) => hospitals.filter(h => h.year === year && h.lead === id).length;
+
+  const changeRole = (id, newRole) => {
+    setTeam(team.map(m => m.id === id ? { ...m, role: newRole } : m));
+    if (viewing?.id === id) setViewing(v => ({ ...v, role: newRole }));
+    const label = window.getRoleLabel ? window.getRoleLabel(newRole).label : newRole;
+    toast.push(`เปลี่ยนสิทธิ์เป็น ${label} แล้ว`);
+  };
 
   const save = (form) => {
     formDirtyRef.current = false;
@@ -338,8 +376,9 @@ const TeamScreen = ({ team, setTeam, hospitals, year, canEdit = true }) => {
                 <div style={{ flex: 1 }}>
                   <div className="display bold" style={{ fontSize: 16, lineHeight: 1.2 }}>{t.nick}</div>
                   <div className="tiny muted">{t.fname} {t.lname}</div>
-                  <div style={{ marginTop: 8 }}>
+                  <div style={{ marginTop: 8, display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
                     <Chip kind="accent">{t.posShort}</Chip>
+                    <RolePill role={t.role} isAdmin={isAdmin} onChange={r => changeRole(t.id, r)} />
                   </div>
                 </div>
               </div>
@@ -379,7 +418,7 @@ const TeamScreen = ({ team, setTeam, hospitals, year, canEdit = true }) => {
           <table className="tbl">
             <thead>
               <tr>
-                <th>ชื่อ</th><th>ตำแหน่ง</th><th>เบอร์</th><th>Email</th><th>พี่เลี้ยง</th>
+                <th>ชื่อ</th><th>ตำแหน่ง</th><th>สิทธิ์</th><th>เบอร์</th><th>Email</th><th>พี่เลี้ยง</th>
                 <th>โครงการปี {year}</th><th></th>
               </tr>
             </thead>
@@ -419,6 +458,7 @@ const TeamScreen = ({ team, setTeam, hospitals, year, canEdit = true }) => {
                     </div>
                   </td>
                   <td>{t.posShort}</td>
+                  <td><RolePill role={t.role} isAdmin={isAdmin} onChange={r => changeRole(t.id, r)} /></td>
                   <td className="mono">{t.phone}</td>
                   <td className="tiny">{t.email1}</td>
                   <td>{t.mentor}</td>
@@ -505,6 +545,15 @@ const TeamScreen = ({ team, setTeam, hospitals, year, canEdit = true }) => {
               <InfoRow icon="info"   label="โรคประจำตัว"   value={viewing.disease || "ไม่มี"} />
               <InfoRow icon="info"   label="ใบขับขี่"      value={viewing.license} />
               <InfoRow icon="users"  label="พี่เลี้ยง"      value={viewing.mentor || "—"} />
+              <div className="row" style={{ gap: 10, padding: "10px 12px", background: "var(--surface-alt)", borderRadius: 10, gridColumn: "span 2" }}>
+                <div style={{ color: "var(--muted)" }}><Icon name="star" size={14} /></div>
+                <div style={{ flex: 1 }}>
+                  <div className="tiny muted">สิทธิ์การใช้งาน {isAdmin && <span style={{ color: "var(--accent)" }}>· เปลี่ยนได้</span>}</div>
+                  <div style={{ marginTop: 4 }}>
+                    <RolePill role={viewing.role} isAdmin={isAdmin} onChange={r => changeRole(viewing.id, r)} />
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         )}
