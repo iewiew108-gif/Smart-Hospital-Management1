@@ -76,11 +76,13 @@ const App = () => {
   const [hospitals, setHospitals] = useState([]);
   const [targets, setTargets]     = useState(window.SEED_TARGETS);
   const [packages, setPackages]   = useState([]);
+  const [installs, setInstalls]   = useState([]);
   const [loading, setLoading]     = useState(window.SupabaseDB?.isConfigured === true);
   const [dataLoaded, setDataLoaded] = useState(false);
   const prevHospitalsRef = React.useRef(null);
   const prevTeamRef      = React.useRef(null);
   const prevPackagesRef  = React.useRef(null);
+  const prevInstallsRef  = React.useRef(null);
 
   const [route, setRoute] = useState("dashboard");
   const [year, setYear] = useState(2026);
@@ -99,17 +101,20 @@ const App = () => {
       setHospitals(window.SEED_HOSPITALS);
       setTargets(window.SEED_TARGETS);
       setPackages(window.SEED_PACKAGES || []);
+      setInstalls(window.SEED_PRODUCT_INSTALLS || []);
       setDataLoaded(true);
       return;
     }
-    window.SupabaseDB.loadAll().then(({ team, hospitals, targets, packages }) => {
+    window.SupabaseDB.loadAll().then(({ team, hospitals, targets, packages, installs }) => {
       setTeam(team);
       setHospitals(hospitals);
       setTargets(targets);
       setPackages(packages || []);
+      setInstalls(installs || []);
       prevTeamRef.current      = team;
       prevHospitalsRef.current = hospitals;
       prevPackagesRef.current  = packages || [];
+      prevInstallsRef.current  = installs || [];
       setDataLoaded(true);
       setLoading(false);
 
@@ -132,6 +137,7 @@ const App = () => {
       setHospitals(window.SEED_HOSPITALS);
       setTargets(window.SEED_TARGETS);
       setPackages(window.SEED_PACKAGES || []);
+      setInstalls(window.SEED_PRODUCT_INSTALLS || []);
       setDataLoaded(true);
       setLoading(false);
     });
@@ -203,6 +209,28 @@ const App = () => {
     prevPackagesRef.current = packages;
   }, [packages, dataLoaded]);
 
+  // ── Sync product installs → Supabase เมื่อข้อมูลเปลี่ยน ──
+  useEffect(() => {
+    if (!dataLoaded || !window.SupabaseDB?.isConfigured) return;
+    const prev = prevInstallsRef.current;
+    if (!prev) { prevInstallsRef.current = installs; return; }
+
+    if (installs.length > prev.length) {
+      const added = installs.filter(r => !prev.find(x => x.id === r.id));
+      added.forEach(r => window.SupabaseDB.upsertInstall(r));
+    } else if (installs.length < prev.length) {
+      const removed = prev.filter(x => !installs.find(c => c.id === x.id));
+      removed.forEach(r => window.SupabaseDB.deleteInstall(r.id));
+    } else {
+      const updated = installs.filter(r => {
+        const x = prev.find(x => x.id === r.id);
+        return x && JSON.stringify(x) !== JSON.stringify(r);
+      });
+      updated.forEach(r => window.SupabaseDB.upsertInstall(r));
+    }
+    prevInstallsRef.current = installs;
+  }, [installs, dataLoaded]);
+
   // ── Sync targets → Supabase เมื่อข้อมูลเปลี่ยน ──────────
   useEffect(() => {
     if (!dataLoaded || !window.SupabaseDB?.isConfigured) return;
@@ -258,6 +286,7 @@ const App = () => {
     team:      { title: "Team Members", sub: "สมาชิกทีมและตารางงาน" },
     targets:   { title: "Annual Targets", sub: "ตั้งเป้าและเทียบยอดในแต่ละปี" },
     package:   { title: "Package Paperless", sub: `ติดตามการส่ง / การซื้อ Package — ปี ${year}` },
+    "product-install": { title: "ติดตั้งผลิตภัณฑ์", sub: "บันทึกการติดตั้ง / ใช้งานผลิตภัณฑ์ที่ขาย" },
     reports:   { title: "Reports", sub: "สรุปยอดและภาพรวมการติดตั้งระบบ" },
     summary:   { title: "Installation Summary", sub: "สรุปยอดติดตั้งตามช่วงวันที่" },
     "leader-summary": { title: "สรุปยอดหัวหน้าทีม", sub: "สรุปยอดการติดตั้งแยกตามหัวหน้าทีมรายคน" },
@@ -274,6 +303,7 @@ const App = () => {
     hospitals: yearHosps.length,
     packagesSent: packages.filter(p => p.sentStatus === "Sent" &&
       yearHosps.find(h => h.id === p.hospitalId)).length || null,
+    installs: installs.length || null,
   };
 
   if (loading) {
@@ -373,6 +403,15 @@ const App = () => {
                 setPackages={setPackages}
                 team={team}
                 year={year}
+                canEdit={perms.canEdit}
+              />
+            )}
+            {route === "product-install" && (
+              <ProductInstallScreen
+                hospitals={hospitals}
+                installs={installs}
+                setInstalls={setInstalls}
+                team={team}
                 canEdit={perms.canEdit}
               />
             )}

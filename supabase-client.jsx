@@ -169,6 +169,26 @@ const _packageFromDb = (row) => ({
   ownerTeam:      row.owner_team      || [],
 });
 
+const _installToDb = (r) => ({
+  id:           r.id,
+  hospital_id:  r.hospitalId  || '',
+  product:      r.product     || '',
+  install_date: r.installDate || null,
+  installers:   r.installers  || [],
+  status:       r.status      || 'รอติดตั้ง',
+  note:         r.note        || '',
+});
+
+const _installFromDb = (row) => ({
+  id:          row.id,
+  hospitalId:  row.hospital_id  || '',
+  product:     row.product      || '',
+  installDate: row.install_date || '',
+  installers:  row.installers   || [],
+  status:      row.status       || 'รอติดตั้ง',
+  note:        row.note         || '',
+});
+
 // ─── Public API ──────────────────────────────────────────────
 
 window.SupabaseDB = {
@@ -182,28 +202,32 @@ window.SupabaseDB = {
         hospitals: [],
         targets:   { 2026: { hospitals: 0, revenue: 0 } },
         packages:  [],
+        installs:  [],
       };
     }
-    const [teamRes, hospsRes, targetsRes, pkgRes] = await Promise.all([
+    const [teamRes, hospsRes, targetsRes, pkgRes, instRes] = await Promise.all([
       _sb.from('team_members').select('*').order('fname'),
       _sb.from('hospitals').select('*').order('year', { ascending: false }),
       _sb.from('targets').select('*').order('year'),
       _sb.from('hospital_packages').select('*'),
+      _sb.from('product_installations').select('*'),
     ]);
     if (teamRes.error)    console.error('[Supabase] team_members:', teamRes.error);
     if (hospsRes.error)   console.error('[Supabase] hospitals:', hospsRes.error);
     if (targetsRes.error) console.error('[Supabase] targets:', targetsRes.error);
     if (pkgRes.error)     console.error('[Supabase] hospital_packages:', pkgRes.error);
+    if (instRes.error)    console.error('[Supabase] product_installations:', instRes.error);
 
     const team      = (teamRes.data   || []).map(_memberFromDb);
     const hospitals = (hospsRes.data  || []).map(_hospitalFromDb);
     const packages  = (pkgRes.data    || []).map(_packageFromDb);
+    const installs  = (instRes.data   || []).map(_installFromDb);
     const tRows     =  targetsRes.data || [];
     const targets   = tRows.length
       ? Object.fromEntries(tRows.map(r => [r.year, { hospitals: r.hospitals, revenue: r.revenue }]))
       : { 2026: { hospitals: 0, revenue: 0 } };
 
-    return { team, hospitals, targets, packages };
+    return { team, hospitals, targets, packages, installs };
   },
 
   // Hospital CRUD
@@ -240,6 +264,18 @@ window.SupabaseDB = {
     if (!_isConfigured) return;
     const { error } = await _sb.from('hospital_packages').delete().eq('id', id);
     if (error) console.error('[Supabase] deletePackage:', error);
+  },
+
+  // Product installation CRUD
+  async upsertInstall(r) {
+    if (!_isConfigured) return;
+    const { error } = await _sb.from('product_installations').upsert(_installToDb(r));
+    if (error) console.error('[Supabase] upsertInstall:', error);
+  },
+  async deleteInstall(id) {
+    if (!_isConfigured) return;
+    const { error } = await _sb.from('product_installations').delete().eq('id', id);
+    if (error) console.error('[Supabase] deleteInstall:', error);
   },
 
   // Targets

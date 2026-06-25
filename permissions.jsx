@@ -5,9 +5,9 @@
 
 const ROLE_MENUS = {
   admin:  "all",
-  lead:   ["dashboard","hospitals","team","gateway","reports","summary","leader-summary","installation-timeline","installation-calendar","team-schedule","calendar","targets","package"],
-  member: ["dashboard","hospitals","team","gateway","reports","summary","installation-timeline","installation-calendar","team-schedule","calendar","package"],
-  viewer: ["dashboard","hospitals","reports","summary","package"],
+  lead:   ["dashboard","hospitals","team","gateway","reports","summary","leader-summary","installation-timeline","installation-calendar","team-schedule","calendar","targets","package","product-install"],
+  member: ["dashboard","hospitals","team","gateway","reports","summary","installation-timeline","installation-calendar","team-schedule","calendar","package","product-install"],
+  viewer: ["dashboard","hospitals","reports","summary","package","product-install"],
 };
 
 const ROLE_CAPS = {

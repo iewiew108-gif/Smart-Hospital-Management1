@@ -73,6 +73,17 @@ const HOSPITALS = [];
 // Packages (การส่ง/การซื้อ Package)
 const PACKAGES = [];
 
+// Product installations (การติดตั้ง/ใช้งานผลิตภัณฑ์ที่ขาย)
+const PRODUCT_INSTALLS = [];
+
+// ── ประเภทผลิตภัณฑ์ที่ติดตั้ง ────────────────────────────────
+const PRODUCT_TYPES = [
+  { key: "bms_plus",     label: "Application BMS HOSxP Plus",                 short: "HOSxP Plus",     color: "#2A8F5E", icon: "box" },
+  { key: "bms_er_dash",  label: "Application BMS HOSxP Plus ER + ติดตั้ง Dashboard", short: "ER + Dashboard", color: "#5B5BD6", icon: "activity" },
+  { key: "nursing_cart", label: "Application Nursing Cart (รถเข็นหัตถการ)",    short: "Nursing Cart",   color: "#C97B1F", icon: "report" },
+];
+const INSTALL_PROGRESS = ["รอติดตั้ง", "กำลังติดตั้ง", "ติดตั้งแล้ว", "กำลังใช้งาน", "หยุดใช้งาน"];
+
 // ── Mapping ราคา Package ตามขนาด/จำนวนเตียง ───────────────
 const PACKAGE_BED_OPTIONS = [
   { beds: 30,  label: "≤ 30 เตียง", price: 27000  },
@@ -98,6 +109,10 @@ window.SEED_PACKAGES = PACKAGES;
 window.PACKAGE_BED_OPTIONS = PACKAGE_BED_OPTIONS;
 window.PACKAGE_SENT_STATUS = PACKAGE_SENT_STATUS;
 window.PACKAGE_CHANNELS = PACKAGE_CHANNELS;
+window.SEED_PRODUCT_INSTALLS = PRODUCT_INSTALLS;
+window.PRODUCT_TYPES = PRODUCT_TYPES;
+window.INSTALL_PROGRESS = INSTALL_PROGRESS;
+window.getProductInfo = (key) => PRODUCT_TYPES.find(p => p.key === key) || { key, label: key, short: key, color: "#94a3b8", icon: "box" };
 
 // ราคา Package จากจำนวนเตียง (คืน 0 ถ้ายังไม่เลือก)
 window.getPackagePrice = (beds) => {

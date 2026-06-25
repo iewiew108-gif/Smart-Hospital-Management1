@@ -19,6 +19,7 @@ const Sidebar = ({ route, setRoute, counts, onLogout }) => {
     { id: "hospitals",             label: "โรงพยาบาล",            icon: "building",   badge: counts.hospitals },
     { id: "team",                  label: "ทีมงาน",                icon: "users",      badge: counts.team },
     { id: "package",               label: "Package Paperless",     icon: "box",        badge: counts.packagesSent },
+    { id: "product-install",       label: "ติดตั้งผลิตภัณฑ์",       icon: "activity",   badge: counts.installs },
     { section: "วิเคราะห์" },
     { id: "gateway",               label: "Gateway Monitor",       icon: "activity" },
     { id: "targets",               label: "เป้าหมายรายปี",        icon: "target" },
