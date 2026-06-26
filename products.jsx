@@ -165,6 +165,71 @@ const ProductInstallScreen = ({ hospitals, installs, setInstalls, team, canEdit 
     .map(id => { const m = team.find(t => t.id === id); return m ? (m.nick || m.fname) : null; })
     .filter(Boolean);
 
+  // ── ส่งออก / พิมพ์ เฉพาะแถวที่กรองอยู่ ────────────────────
+  const productLabel = (key) => window.getProductInfo ? window.getProductInfo(key).label : key;
+  const filterLabel = () => productFilter === "ทั้งหมด" ? "ทุกผลิตภัณฑ์" : productLabel(productFilter);
+  const COLS = ["รหัส รพ.", "ชื่อโรงพยาบาล", "ผลิตภัณฑ์", "วันที่ติดตั้ง", "ผู้ติดตั้ง/ใช้งาน", "สถานะ", "หมายเหตุ"];
+  const exportData = () => rows.map(r => {
+    const h = hospById[r.hospitalId];
+    return [
+      h?.code || "",
+      h?.name || "(ไม่พบโรงพยาบาล)",
+      productLabel(r.product),
+      r.installDate ? (window.fmtDate ? window.fmtDate(r.installDate) : r.installDate) : "",
+      installerNames(r.installers).join(", "),
+      r.status || "",
+      r.note || "",
+    ];
+  });
+
+  const exportCSV = () => {
+    const data = exportData();
+    if (!data.length) { toast.push("ไม่มีข้อมูลให้ส่งออก"); return; }
+    const esc = (v) => `"${String(v).replace(/"/g, '""')}"`;
+    const csv = "﻿" + [COLS, ...data].map(row => row.map(esc).join(",")).join("\r\n");
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `ติดตั้งผลิตภัณฑ์_${filterLabel()}_${new Date().toISOString().slice(0, 10)}.csv`;
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    toast.push(`ส่งออก ${data.length} รายการแล้ว`);
+  };
+
+  const printRows = () => {
+    const data = exportData();
+    if (!data.length) { toast.push("ไม่มีข้อมูลให้พิมพ์"); return; }
+    const esc = (s) => String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+    const today = new Date().toLocaleDateString("th-TH", { year: "numeric", month: "long", day: "numeric" });
+    const thead = COLS.map(c => `<th>${esc(c)}</th>`).join("");
+    const tbody = data.map(row => `<tr>${row.map((c, i) =>
+      `<td${i === 0 ? ' class="mono"' : ""}>${esc(c) || "—"}</td>`).join("")}</tr>`).join("");
+    const html = `<!DOCTYPE html><html lang="th"><head><meta charset="UTF-8">
+<title>รายงานการติดตั้งผลิตภัณฑ์</title>
+<style>
+  * { font-family: "Sarabun", "TH Sarabun New", sans-serif; }
+  body { padding: 24px; color: #1a202c; }
+  h1 { font-size: 20px; margin: 0 0 4px; }
+  .meta { font-size: 13px; color: #555; margin-bottom: 16px; }
+  table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+  th, td { border: 1px solid #cbd5e0; padding: 6px 8px; text-align: left; vertical-align: top; }
+  thead th { background: #f1f5f9; font-weight: 700; }
+  tbody tr:nth-child(even) { background: #f8fafc; }
+  .mono { font-family: "Consolas", monospace; }
+  @media print { body { padding: 0; } }
+</style></head>
+<body onload="window.print()">
+  <h1>รายงานการติดตั้ง / ใช้งานผลิตภัณฑ์</h1>
+  <div class="meta">กรองเฉพาะ: <b>${esc(filterLabel())}</b>${q ? ` · ค้นหา: "${esc(q)}"` : ""} · จำนวน ${data.length} รายการ · พิมพ์เมื่อ ${esc(today)}</div>
+  <table><thead><tr>${thead}</tr></thead><tbody>${tbody}</tbody></table>
+</body></html>`;
+    const win = window.open("", "_blank");
+    if (!win) { toast.push("กรุณาอนุญาต popup เพื่อพิมพ์"); return; }
+    win.document.write(html);
+    win.document.close();
+  };
+
   return (
     <div>
       <div className="page-header">
@@ -174,6 +239,12 @@ const ProductInstallScreen = ({ hospitals, installs, setInstalls, team, canEdit 
         </div>
         <div className="row" style={{ gap: 10 }}>
           <SearchBox value={q} onChange={setQ} placeholder="ค้นหาด้วยชื่อ รพ. / รหัส / หมายเหตุ" />
+          <button className="btn" onClick={exportCSV} title="ส่งออกเฉพาะรายการที่กรองอยู่เป็นไฟล์ CSV">
+            <Icon name="download" size={14} /> Export
+          </button>
+          <button className="btn" onClick={printRows} title="พิมพ์เฉพาะรายการที่กรองอยู่">
+            <Icon name="printer" size={14} /> Print
+          </button>
           {canEdit && (
             <button className="btn btn-accent" onClick={() => setEditing("new")}>
               <Icon name="plus" size={14} /> เพิ่มการติดตั้ง
